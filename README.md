@@ -20,20 +20,20 @@ photometry = matches_to_photometry(matches)
 
 The default catalog set is:
 
-| Output key | VizieR table | Bands |
-| --- | --- | --- |
-| `galex_ais` | `II/335/galex_ais` | `FUV`, `NUV` |
-| `sdss_dr16` | `V/154/sdss16` | `u`, `g`, `r`, `i`, `z` |
-| `2mass` | `II/246/out` | `J`, `H`, `Ks` |
-| `allwise` | `II/328/allwise` | `W1`, `W2`, `W3`, `W4` |
+| Output key | VizieR table | Bands | Match radius |
+| --- | --- | --- | ---: |
+| `galex_ais` | `II/335/galex_ais` | `FUV`, `NUV` | `3.0"` |
+| `sdss_dr16` | `V/154/sdss16` | `u`, `g`, `r`, `i`, `z` | `1.0"` |
+| `2mass` | `II/246/out` | `J`, `H`, `Ks` | `2.0"` |
+| `allwise` | `II/328/allwise` | `W1`, `W2`, `W3`, `W4` | `3.0"` |
 
 Optional catalog aliases are also available:
 
-| Alias | VizieR table | Bands |
-| --- | --- | --- |
-| `akari_irc` | `II/297/irc` | `S9W`, `L18W` |
-| `akari_fis` | `II/298/fis` | `N60`, `WIDE-S`, `WIDE-L`, `N160` |
-| `iras_psc` | `II/125/main` | `F12`, `F25`, `F60`, `F100` |
+| Alias | VizieR table | Bands | Default radius |
+| --- | --- | --- | ---: |
+| `akari_irc` | `II/297/irc` | `S9W`, `L18W` | `6.0"` |
+| `akari_fis` | `II/298/fis` | `N60`, `WIDE-S`, `WIDE-L`, `N160` | `20.0"` |
+| `iras_psc` | `II/125/main` | `F12`, `F25`, `F60`, `F100` | `30.0"` |
 
 ```python
 matches = xmatch_catalogs(
