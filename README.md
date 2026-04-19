@@ -3,6 +3,36 @@
 Bulk cross-match helpers for collecting multi-band photometry from VizieR/CDS
 catalogs.
 
+## Installation
+
+Install from GitHub:
+
+```bash
+python -m pip install "bandwagon @ git+https://github.com/burke86/bandwagon.git"
+```
+
+For local development:
+
+```bash
+git clone git@github.com:burke86/bandwagon.git
+cd bandwagon
+python -m pip install -e ".[dev]"
+```
+
+You can also install the pinned runtime list directly:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Run the tests with:
+
+```bash
+pytest -q
+```
+
+## Usage
+
 ```python
 from astropy.coordinates import SkyCoord
 import astropy.units as u
