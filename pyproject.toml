@@ -18,6 +18,9 @@ dependencies = [
 dev = [
     "pytest>=8",
 ]
+spectra = [
+    "sparclclient>=1.2",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bandwagon"]

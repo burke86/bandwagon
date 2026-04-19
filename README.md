@@ -39,6 +39,7 @@ import astropy.units as u
 from bandwagon import (
     DEFAULT_CATALOGS,
     matches_to_photometry,
+    query_archival_spectra,
     query_simbad_redshifts,
     select_best_redshift,
     xmatch_catalogs,
@@ -55,12 +56,29 @@ photometry = matches_to_photometry(matches)
 
 redshift_candidates = query_simbad_redshifts(coords, source_id=["src-a", "src-b"])
 redshifts = select_best_redshift(redshift_candidates)
+
+spectra = query_archival_spectra(
+    coords,
+    source_id=["src-a", "src-b"],
+    providers=("desi", "sdss"),
+)
 ```
 
 SIMBAD redshift queries return a separate long-form table with `source_id`,
 `object_name`, `redshift`, `redshift_err`, `quality`, `reference`, and
 `match_distance_arcsec`. They are not folded into the photometry table, so
 conflicting redshift candidates can be inspected before selecting one.
+
+Spectra queries are opt-in and return metadata/index rows; they do not download
+spectra by default. Supported providers are `desi`, `sdss`, `lamost`, `6dfgs`,
+and `mast`. DESI uses SPARCL and requires the optional spectra extra:
+
+```bash
+python -m pip install -e ".[spectra]"
+```
+
+LAMOST and 6dFGS are metadata-first VizieR XMatch providers. SDSS and MAST use
+`astroquery`. Bandwagon does not use `pyvo`.
 
 The default catalog set is:
 
