@@ -4,6 +4,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 
 from bandwagon import (
+    DEFAULT_CATALOGS,
     XMatchError,
     coords_to_source_table,
     normalize_vizier_catalog,
@@ -36,6 +37,10 @@ def test_normalize_vizier_catalog_resolves_aliases():
     assert normalize_vizier_catalog("akari_fis") == "vizier:II/298/fis"
     assert normalize_vizier_catalog("iras_psc") == "vizier:II/125/main"
     assert normalize_vizier_catalog("vizier:II/246/out") == "vizier:II/246/out"
+
+
+def test_default_catalogs_include_2mass():
+    assert DEFAULT_CATALOGS["2mass"] == "II/246/out"
 
 
 def test_match_jobs_use_default_optional_radii():

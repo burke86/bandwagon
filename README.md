@@ -24,13 +24,13 @@ The default catalog set is:
 | --- | --- | --- |
 | `galex_ais` | `II/335/galex_ais` | `FUV`, `NUV` |
 | `sdss_dr16` | `V/154/sdss16` | `u`, `g`, `r`, `i`, `z` |
+| `2mass` | `II/246/out` | `J`, `H`, `Ks` |
 | `allwise` | `II/328/allwise` | `W1`, `W2`, `W3`, `W4` |
 
 Optional catalog aliases are also available:
 
 | Alias | VizieR table | Bands |
 | --- | --- | --- |
-| `2mass` | `II/246/out` | `J`, `H`, `Ks` |
 | `akari_irc` | `II/297/irc` | `S9W`, `L18W` |
 | `akari_fis` | `II/298/fis` | `N60`, `WIDE-S`, `WIDE-L`, `N160` |
 | `iras_psc` | `II/125/main` | `F12`, `F25`, `F60`, `F100` |

@@ -39,6 +39,7 @@ COMMON_CATALOGS: dict[str, str] = {
 DEFAULT_CATALOGS: dict[str, str] = {
     "galex_ais": "II/335/galex_ais",
     "sdss_dr16": "V/154/sdss16",
+    "2mass": "II/246/out",
     "allwise": "II/328/allwise",
 }
 
