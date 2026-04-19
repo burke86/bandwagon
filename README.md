@@ -1,6 +1,6 @@
 # bandwagon
 
-Bulk cross-match helpers for collecting multi-band photometry from VizieR/CDS
+Bulk cross-match helpers for collecting archival multi-band photometry, redshifts, and spectra from VizieR/CDS
 catalogs.
 
 ## Installation
