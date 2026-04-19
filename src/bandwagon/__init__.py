@@ -11,6 +11,7 @@ from .photometry import (
     magnitude_to_flux_mjy,
     matches_to_photometry,
 )
+from .redshift import query_simbad_redshifts, select_best_redshift
 from .xmatch import (
     CATALOG_BANDS,
     COMMON_CATALOGS,
@@ -42,6 +43,8 @@ __all__ = [
     "make_source_table",
     "matches_to_photometry",
     "normalize_vizier_catalog",
+    "query_simbad_redshifts",
+    "select_best_redshift",
     "xmatch_catalog",
     "xmatch_catalogs",
 ]

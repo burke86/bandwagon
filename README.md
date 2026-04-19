@@ -36,7 +36,13 @@ pytest -q
 ```python
 from astropy.coordinates import SkyCoord
 import astropy.units as u
-from bandwagon import DEFAULT_CATALOGS, matches_to_photometry, xmatch_catalogs
+from bandwagon import (
+    DEFAULT_CATALOGS,
+    matches_to_photometry,
+    query_simbad_redshifts,
+    select_best_redshift,
+    xmatch_catalogs,
+)
 
 coords = SkyCoord(
     ra=[10.0, 11.0] * u.deg,
@@ -46,7 +52,15 @@ coords = SkyCoord(
 
 matches = xmatch_catalogs(coords, source_id=["src-a", "src-b"])
 photometry = matches_to_photometry(matches)
+
+redshift_candidates = query_simbad_redshifts(coords, source_id=["src-a", "src-b"])
+redshifts = select_best_redshift(redshift_candidates)
 ```
+
+SIMBAD redshift queries return a separate long-form table with `source_id`,
+`object_name`, `redshift`, `redshift_err`, `quality`, `reference`, and
+`match_distance_arcsec`. They are not folded into the photometry table, so
+conflicting redshift candidates can be inspected before selecting one.
 
 The default catalog set is:
 
