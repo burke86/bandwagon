@@ -72,8 +72,8 @@ CATALOG_BANDS: dict[str, tuple[str, ...]] = {
     "iras_psc": ("F12", "F25", "F60", "F100"),
     "desi_legacy_dr8_north": ("g", "r", "z", "W1", "W2"),
     "desi_legacy_dr8_south": ("g", "r", "z", "W1", "W2"),
-    "legacy_dr8_north": ("photo-z", "value-added"),
-    "legacy_dr8_south": ("photo-z", "value-added"),
+    "legacy_dr8_north": ("photo-z", "g", "r", "z", "W1", "W2"),
+    "legacy_dr8_south": ("photo-z", "g", "r", "z", "W1", "W2"),
 }
 
 

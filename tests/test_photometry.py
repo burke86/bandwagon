@@ -1,7 +1,12 @@
 import numpy as np
 from astropy.table import Table
 
-from bandwagon import jy_to_flux_mjy, magnitude_to_flux_mjy, matches_to_photometry
+from bandwagon import (
+    jy_to_flux_mjy,
+    magnitude_to_flux_mjy,
+    matches_to_photometry,
+    nanomaggy_to_flux_mjy,
+)
 
 
 def test_magnitude_to_flux_mjy_uses_supplied_zero_point():
@@ -19,6 +24,17 @@ def test_jy_to_flux_mjy_handles_absolute_and_percent_errors():
     flux, err = jy_to_flux_mjy(0.5, 10.0, err_is_percent=True)
     assert flux == 500.0
     assert err == 50.0
+
+
+def test_nanomaggy_to_flux_mjy_uses_inverse_variance():
+    flux, err = nanomaggy_to_flux_mjy(1000.0, 25.0)
+
+    assert np.isclose(flux, 3.631)
+    assert np.isclose(err, 0.003631 / 5.0)
+
+    flux, err = nanomaggy_to_flux_mjy(-1.0, 25.0)
+    assert np.isnan(flux)
+    assert np.isnan(err)
 
 
 def test_matches_to_photometry_converts_default_and_optional_catalogs():
@@ -83,6 +99,24 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
                 "q_Fnu_25": [1],
             }
         ),
+        "legacy_dr8_north": Table(
+            {
+                "source_id": ["src"],
+                "FLUX_G": [1000.0],
+                "FLUX_IVAR_G": [25.0],
+                "FLUX_R": [800.0],
+                "FLUX_IVAR_R": [16.0],
+                "FLUX_Z": [-1.0],
+                "FLUX_IVAR_Z": [9.0],
+                "FLUX_W1": [500.0],
+                "FLUX_IVAR_W1": [4.0],
+                "FLUX_W2": [400.0],
+                "FLUX_IVAR_W2": [1.0],
+                "PSFSIZE_G": [1.4],
+                "PSFSIZE_R": [1.3],
+                "angDist": [0.15],
+            }
+        ),
     }
 
     phot = matches_to_photometry(matches, min_quality=2)
@@ -98,11 +132,21 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
         "S9W_akari",
         "L18W_akari",
         "F12_iras",
+        "g_legacy",
+        "r_legacy",
+        "W1_legacy",
+        "W2_legacy",
     }
+    assert "z_legacy" not in set(phot["filter_name"])
     assert np.sum(phot["source_id"] == "extended") == 3
     assert "F25_iras" not in set(phot["filter_name"])
     assert np.all(np.asarray(phot["flux_mjy"], dtype=float) > 0.0)
     assert np.all(np.asarray(phot["flux_err_mjy"], dtype=float) > 0.0)
+
+    legacy_g = phot[phot["filter_name"] == "g_legacy"][0]
+    assert np.isclose(legacy_g["flux_mjy"], 3.631)
+    assert np.isclose(legacy_g["mag"], 15.0)
+    assert np.isclose(legacy_g["psf_fwhm_arcsec"], 1.4)
 
 
 def test_matches_to_photometry_deduplicates_by_distance_then_snr():

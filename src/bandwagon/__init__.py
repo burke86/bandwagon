@@ -3,6 +3,7 @@
 from .photometry import (
     CATALOG_BAND_SPECS,
     CATALOG_FLUX_SPECS,
+    CATALOG_NANOMAGGY_SPECS,
     PSF_FWHM_ARCSEC,
     SPECLITE_NAMES,
     TWOMASS_VEGA_ZEROPOINT_JY,
@@ -10,6 +11,7 @@ from .photometry import (
     jy_to_flux_mjy,
     magnitude_to_flux_mjy,
     matches_to_photometry,
+    nanomaggy_to_flux_mjy,
 )
 from .redshift import query_simbad_redshifts, select_best_redshift
 from .spectra import empty_spectra_table, query_archival_spectra
@@ -30,6 +32,7 @@ __all__ = [
     "CATALOG_BAND_SPECS",
     "CATALOG_BANDS",
     "CATALOG_FLUX_SPECS",
+    "CATALOG_NANOMAGGY_SPECS",
     "COMMON_CATALOGS",
     "DEFAULT_CATALOGS",
     "DEFAULT_RADII_ARCSEC",
@@ -44,6 +47,7 @@ __all__ = [
     "magnitude_to_flux_mjy",
     "make_source_table",
     "matches_to_photometry",
+    "nanomaggy_to_flux_mjy",
     "normalize_vizier_catalog",
     "query_simbad_redshifts",
     "query_archival_spectra",

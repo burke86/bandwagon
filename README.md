@@ -93,8 +93,8 @@ The default catalog set is:
 | `2mass` | `II/246/out` | `J`, `H`, `Ks` | `2.0"` |
 | `2mass_xsc` | `VII/233/xsc` | `J.ext`, `H.ext`, `K.ext` | `2.0"` |
 | `allwise` | `II/328/allwise` | `W1`, `W2`, `W3`, `W4` | `3.0"` |
-| `legacy_dr8_north` | `VII/292/north` | Legacy DR8 photo-z/value-added fields | `1.0"` |
-| `legacy_dr8_south` | `VII/292/south` | Legacy DR8 photo-z/value-added fields | `1.0"` |
+| `legacy_dr8_north` | `VII/292/north` | Legacy DR8 photo-z fields; `grzW1W2` if Tractor-style flux columns are present | `1.0"` |
+| `legacy_dr8_south` | `VII/292/south` | Legacy DR8 photo-z fields; `grzW1W2` if Tractor-style flux columns are present | `1.0"` |
 
 Optional catalog aliases are also available:
 
@@ -121,8 +121,14 @@ photometry = matches_to_photometry(matches, min_quality=2)
 
 `2mass` is converted from Vega magnitudes. AKARI and IRAS publish flux
 densities, so Bandwagon converts Jy to mJy directly. IRAS uncertainty columns
-are percent flux uncertainties; AKARI uncertainty columns are Jy.
+are percent flux uncertainties; AKARI uncertainty columns are Jy. Legacy Survey
+Tractor-style `FLUX_*`/`FLUX_IVAR_*` columns are AB nanomaggies, converted with
+`1 nanomaggy = 0.003631 mJy`; non-positive fluxes or inverse variances are
+dropped. These rows use distinct filter names (`g_legacy`, `r_legacy`,
+`z_legacy`, `W1_legacy`, `W2_legacy`) so they do not overwrite SDSS or AllWISE
+measurements.
 
 DESI/Legacy Survey aliases are available for VizieR's DR8 north/south
-photometric redshift tables, but SDSS is the default optical source because it
-provides the full `ugriz` set through CDS XMatch.
+photometric redshift tables. The VizieR `VII/292` tables themselves are photo-z
+catalogs; Bandwagon's Legacy photometry normalization is used when a matched
+table includes the underlying Tractor flux columns.

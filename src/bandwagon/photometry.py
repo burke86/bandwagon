@@ -32,10 +32,15 @@ SPECLITE_NAMES: dict[str, str] = {
     "r_sdss": "sdss2010-r",
     "i_sdss": "sdss2010-i",
     "z_sdss": "sdss2010-z",
+    "g_legacy": "decam2014-g",
+    "r_legacy": "decam2014-r",
+    "z_legacy": "decam2014-z",
     "W1": "wise2010-W1",
     "W2": "wise2010-W2",
     "W3": "wise2010-W3",
     "W4": "wise2010-W4",
+    "W1_legacy": "wise2010-W1",
+    "W2_legacy": "wise2010-W2",
     "J_2mass": "twomass-J",
     "H_2mass": "twomass-H",
     "Ks_2mass": "twomass-Ks",
@@ -59,10 +64,15 @@ PSF_FWHM_ARCSEC: dict[str, float] = {
     "r_sdss": 1.32,
     "i_sdss": 1.26,
     "z_sdss": 1.29,
+    "g_legacy": 1.30,
+    "r_legacy": 1.20,
+    "z_legacy": 1.10,
     "W1": 6.08,
     "W2": 6.84,
     "W3": 7.36,
     "W4": 11.99,
+    "W1_legacy": 6.08,
+    "W2_legacy": 6.84,
     "J_2mass": 2.5,
     "H_2mass": 2.5,
     "Ks_2mass": 2.5,
@@ -101,6 +111,17 @@ class FluxBandSpec:
     err_col: str
     quality_col: str | None = None
     err_is_percent: bool = False
+
+
+@dataclass(frozen=True)
+class NanomaggyBandSpec:
+    """Column mapping for one catalog band stored as AB nanomaggies."""
+
+    band: str
+    filter_name: str
+    flux_col: str | Sequence[str]
+    ivar_col: str | Sequence[str]
+    psf_col: str | Sequence[str] | None = None
 
 
 CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
@@ -152,6 +173,49 @@ CATALOG_FLUX_SPECS: dict[str, tuple[FluxBandSpec, ...]] = {
     ),
 }
 
+_LEGACY_NANOMAGGY_SPECS = (
+    NanomaggyBandSpec(
+        "g",
+        "g_legacy",
+        ("FLUX_G", "flux_g"),
+        ("FLUX_IVAR_G", "flux_ivar_g"),
+        ("PSFSIZE_G", "psfsize_g"),
+    ),
+    NanomaggyBandSpec(
+        "r",
+        "r_legacy",
+        ("FLUX_R", "flux_r"),
+        ("FLUX_IVAR_R", "flux_ivar_r"),
+        ("PSFSIZE_R", "psfsize_r"),
+    ),
+    NanomaggyBandSpec(
+        "z",
+        "z_legacy",
+        ("FLUX_Z", "flux_z"),
+        ("FLUX_IVAR_Z", "flux_ivar_z"),
+        ("PSFSIZE_Z", "psfsize_z"),
+    ),
+    NanomaggyBandSpec(
+        "W1",
+        "W1_legacy",
+        ("FLUX_W1", "flux_w1"),
+        ("FLUX_IVAR_W1", "flux_ivar_w1"),
+    ),
+    NanomaggyBandSpec(
+        "W2",
+        "W2_legacy",
+        ("FLUX_W2", "flux_w2"),
+        ("FLUX_IVAR_W2", "flux_ivar_w2"),
+    ),
+)
+
+CATALOG_NANOMAGGY_SPECS: dict[str, tuple[NanomaggyBandSpec, ...]] = {
+    "desi_legacy_dr8_north": _LEGACY_NANOMAGGY_SPECS,
+    "desi_legacy_dr8_south": _LEGACY_NANOMAGGY_SPECS,
+    "legacy_dr8_north": _LEGACY_NANOMAGGY_SPECS,
+    "legacy_dr8_south": _LEGACY_NANOMAGGY_SPECS,
+}
+
 
 def magnitude_to_flux_mjy(mag, mag_err, *, zero_jy: float) -> tuple[float, float]:
     """Convert a magnitude and magnitude error to flux density in mJy."""
@@ -162,6 +226,20 @@ def magnitude_to_flux_mjy(mag, mag_err, *, zero_jy: float) -> tuple[float, float
         return np.nan, np.nan
     flux_mjy = 1.0e3 * float(zero_jy) * 10.0 ** (-0.4 * mag)
     flux_err_mjy = flux_mjy * np.log(10.0) * 0.4 * mag_err
+    return flux_mjy, flux_err_mjy
+
+
+def nanomaggy_to_flux_mjy(flux_nanomaggy, flux_ivar) -> tuple[float, float]:
+    """Convert an AB nanomaggy flux and inverse variance to mJy."""
+
+    flux_nanomaggy = _as_float(flux_nanomaggy)
+    flux_ivar = _as_float(flux_ivar)
+    if not np.isfinite(flux_nanomaggy) or flux_nanomaggy <= 0.0:
+        return np.nan, np.nan
+    if not np.isfinite(flux_ivar) or flux_ivar <= 0.0:
+        return np.nan, np.nan
+    flux_mjy = 0.003631 * flux_nanomaggy
+    flux_err_mjy = 0.003631 / np.sqrt(flux_ivar)
     return flux_mjy, flux_err_mjy
 
 
@@ -214,7 +292,8 @@ def _catalog_to_photometry(
 ) -> Table:
     mag_specs = CATALOG_BAND_SPECS.get(catalog_key, ())
     flux_specs = CATALOG_FLUX_SPECS.get(catalog_key, ())
-    if not mag_specs and not flux_specs:
+    nanomaggy_specs = CATALOG_NANOMAGGY_SPECS.get(catalog_key, ())
+    if not mag_specs and not flux_specs and not nanomaggy_specs:
         return _empty_photometry_table()
     if source_id_col not in table.colnames:
         raise KeyError(f"matched table {catalog_key!r} is missing {source_id_col!r}")
@@ -285,6 +364,34 @@ def _catalog_to_photometry(
                     "match_distance_arcsec": distance_arcsec,
                 }
             )
+        for spec in nanomaggy_specs:
+            flux_nanomaggy = _first_value(row, table.colnames, spec.flux_col)
+            flux_ivar = _first_value(row, table.colnames, spec.ivar_col)
+            if flux_nanomaggy is None or flux_ivar is None:
+                continue
+            flux_mjy, flux_err_mjy = nanomaggy_to_flux_mjy(flux_nanomaggy, flux_ivar)
+            if not np.isfinite(flux_mjy) or not np.isfinite(flux_err_mjy) or flux_mjy <= 0.0:
+                continue
+            flux_nanomaggy = _as_float(flux_nanomaggy)
+            flux_err_nanomaggy = 1.0 / np.sqrt(_as_float(flux_ivar))
+            mag = 22.5 - 2.5 * np.log10(flux_nanomaggy)
+            mag_err = (2.5 / np.log(10.0)) * (flux_err_nanomaggy / flux_nanomaggy)
+            rows.append(
+                {
+                    source_id_col: source_id,
+                    "catalog": catalog_key,
+                    "band": spec.band,
+                    "filter_name": spec.filter_name,
+                    "speclite_name": SPECLITE_NAMES[spec.filter_name],
+                    "mag": mag,
+                    "mag_err": mag_err,
+                    "mag_system": "ab",
+                    "flux_mjy": flux_mjy,
+                    "flux_err_mjy": flux_err_mjy,
+                    "psf_fwhm_arcsec": _row_psf_fwhm(row, table.colnames, spec),
+                    "match_distance_arcsec": distance_arcsec,
+                }
+            )
 
     if not rows:
         return _empty_photometry_table()
@@ -329,6 +436,15 @@ def _first_value(row, colnames, candidates):
         if col in colnames:
             return row[col]
     return None
+
+
+def _row_psf_fwhm(row, colnames, spec: NanomaggyBandSpec) -> float:
+    if spec.psf_col is not None:
+        value = _first_value(row, colnames, spec.psf_col)
+        psf_fwhm = _as_float(value)
+        if np.isfinite(psf_fwhm) and psf_fwhm > 0.0:
+            return psf_fwhm
+    return PSF_FWHM_ARCSEC[spec.filter_name]
 
 
 def jy_to_flux_mjy(
