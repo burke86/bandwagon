@@ -49,6 +49,18 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
                 "angDist": [0.2],
             }
         ),
+        "2mass_xsc": Table(
+            {
+                "source_id": ["extended"],
+                "J.ext": [13.0],
+                "e_J.ext": [0.03],
+                "H.ext": [12.0],
+                "e_H.ext": [0.04],
+                "K.ext": [11.0],
+                "e_K.ext": [0.05],
+                "angDist": [5.0],
+            }
+        ),
         "akari_irc": Table(
             {
                 "source_id": ["src"],
@@ -87,6 +99,7 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
         "L18W_akari",
         "F12_iras",
     }
+    assert np.sum(phot["source_id"] == "extended") == 3
     assert "F25_iras" not in set(phot["filter_name"])
     assert np.all(np.asarray(phot["flux_mjy"], dtype=float) > 0.0)
     assert np.all(np.asarray(phot["flux_err_mjy"], dtype=float) > 0.0)

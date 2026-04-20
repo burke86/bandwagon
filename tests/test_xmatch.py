@@ -41,6 +41,9 @@ def test_normalize_vizier_catalog_resolves_aliases():
 
 def test_default_catalogs_include_2mass():
     assert DEFAULT_CATALOGS["2mass"] == "II/246/out"
+    assert DEFAULT_CATALOGS["2mass_xsc"] == "VII/233/xsc"
+    assert DEFAULT_CATALOGS["legacy_dr8_north"] == "VII/292/north"
+    assert DEFAULT_CATALOGS["legacy_dr8_south"] == "VII/292/south"
 
 
 def test_match_jobs_use_default_optional_radii():

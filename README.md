@@ -91,7 +91,10 @@ The default catalog set is:
 | `galex_ais` | `II/335/galex_ais` | `FUV`, `NUV` | `3.0"` |
 | `sdss_dr16` | `V/154/sdss16` | `u`, `g`, `r`, `i`, `z` | `1.0"` |
 | `2mass` | `II/246/out` | `J`, `H`, `Ks` | `2.0"` |
+| `2mass_xsc` | `VII/233/xsc` | `J.ext`, `H.ext`, `K.ext` | `2.0"` |
 | `allwise` | `II/328/allwise` | `W1`, `W2`, `W3`, `W4` | `3.0"` |
+| `legacy_dr8_north` | `VII/292/north` | Legacy DR8 photo-z/value-added fields | `1.0"` |
+| `legacy_dr8_south` | `VII/292/south` | Legacy DR8 photo-z/value-added fields | `1.0"` |
 
 Optional catalog aliases are also available:
 

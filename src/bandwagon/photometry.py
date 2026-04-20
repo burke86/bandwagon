@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -85,8 +85,8 @@ class BandSpec:
 
     band: str
     filter_name: str
-    mag_col: str
-    err_col: str
+    mag_col: str | Sequence[str]
+    err_col: str | Sequence[str]
     system: str
     zero_jy: float
 
@@ -125,6 +125,11 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
         BandSpec("J", "J_2mass", "Jmag", "e_Jmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"]),
         BandSpec("H", "H_2mass", "Hmag", "e_Hmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"]),
         BandSpec("Ks", "Ks_2mass", "Kmag", "e_Kmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"]),
+    ),
+    "2mass_xsc": (
+        BandSpec("J.ext", "J_2mass", ("J.ext", "Jmag"), ("e_J.ext", "e_Jmag"), "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"]),
+        BandSpec("H.ext", "H_2mass", ("H.ext", "Hmag"), ("e_H.ext", "e_Hmag"), "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"]),
+        BandSpec("K.ext", "Ks_2mass", ("K.ext", "Kmag"), ("e_K.ext", "e_Kmag"), "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"]),
     ),
 }
 
@@ -219,10 +224,12 @@ def _catalog_to_photometry(
         source_id = row[source_id_col]
         distance_arcsec = _match_distance_arcsec(row)
         for spec in mag_specs:
-            if spec.mag_col not in table.colnames or spec.err_col not in table.colnames:
+            mag = _first_value(row, table.colnames, spec.mag_col)
+            mag_err = _first_value(row, table.colnames, spec.err_col)
+            if mag is None or mag_err is None:
                 continue
-            mag = _as_float(row[spec.mag_col])
-            mag_err = _as_float(row[spec.err_col])
+            mag = _as_float(mag)
+            mag_err = _as_float(mag_err)
             if max_mag_err is not None and np.isfinite(mag_err) and mag_err > max_mag_err:
                 continue
             flux_mjy, flux_err_mjy = magnitude_to_flux_mjy(
@@ -313,6 +320,15 @@ def _match_distance_arcsec(row) -> float:
             value = _as_float(row[col])
             return value if np.isfinite(value) else np.nan
     return np.nan
+
+
+def _first_value(row, colnames, candidates):
+    if isinstance(candidates, str):
+        candidates = (candidates,)
+    for col in candidates:
+        if col in colnames:
+            return row[col]
+    return None
 
 
 def jy_to_flux_mjy(

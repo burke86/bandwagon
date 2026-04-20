@@ -22,6 +22,7 @@ SourceInput = SkyCoord | Table
 
 COMMON_CATALOGS: dict[str, str] = {
     "2mass": "II/246/out",
+    "2mass_xsc": "VII/233/xsc",
     "akari_fis": "II/298/fis",
     "akari_irc": "II/297/irc",
     "allwise": "II/328/allwise",
@@ -33,6 +34,7 @@ COMMON_CATALOGS: dict[str, str] = {
     "legacy_dr8_north": "VII/292/north",
     "legacy_dr8_south": "VII/292/south",
     "sdss_dr16": "V/154/sdss16",
+    "twomass_xsc": "VII/233/xsc",
     "wise": "II/328/allwise",
 }
 
@@ -40,7 +42,10 @@ DEFAULT_CATALOGS: dict[str, str] = {
     "galex_ais": "II/335/galex_ais",
     "sdss_dr16": "V/154/sdss16",
     "2mass": "II/246/out",
+    "2mass_xsc": "VII/233/xsc",
     "allwise": "II/328/allwise",
+    "legacy_dr8_north": "VII/292/north",
+    "legacy_dr8_south": "VII/292/south",
 }
 
 DEFAULT_RADII_ARCSEC: dict[str, float] = {
@@ -48,6 +53,9 @@ DEFAULT_RADII_ARCSEC: dict[str, float] = {
     "sdss_dr16": 1.0,
     "allwise": 3.0,
     "2mass": 2.0,
+    "2mass_xsc": 2.0,
+    "legacy_dr8_north": 1.0,
+    "legacy_dr8_south": 1.0,
     "akari_irc": 6.0,
     "akari_fis": 20.0,
     "iras_psc": 30.0,
@@ -58,11 +66,14 @@ CATALOG_BANDS: dict[str, tuple[str, ...]] = {
     "sdss_dr16": ("u", "g", "r", "i", "z"),
     "allwise": ("W1", "W2", "W3", "W4"),
     "2mass": ("J", "H", "Ks"),
+    "2mass_xsc": ("J.ext", "H.ext", "K.ext"),
     "akari_irc": ("S9W", "L18W"),
     "akari_fis": ("N60", "WIDE-S", "WIDE-L", "N160"),
     "iras_psc": ("F12", "F25", "F60", "F100"),
     "desi_legacy_dr8_north": ("g", "r", "z", "W1", "W2"),
     "desi_legacy_dr8_south": ("g", "r", "z", "W1", "W2"),
+    "legacy_dr8_north": ("photo-z", "value-added"),
+    "legacy_dr8_south": ("photo-z", "value-added"),
 }
 
 
