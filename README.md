@@ -1,5 +1,9 @@
 # bandwagon
 
+<p align="center">
+  <img src="logo.png" alt="Bandwagon logo" width="420">
+</p>
+
 Bulk cross-match helpers for collecting archival multi-band photometry, redshifts, and spectra from VizieR/CDS
 catalogs.
 
