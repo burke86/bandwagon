@@ -131,11 +131,11 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
         BandSpec("NUV", "NUV_galex", "NUVmag", "e_NUVmag", "ab", AB_ZEROPOINT_JY),
     ),
     "sdss_dr16": (
-        BandSpec("u", "u_sdss", "upmag", "e_upmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
-        BandSpec("g", "g_sdss", "gpmag", "e_gpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
-        BandSpec("r", "r_sdss", "rpmag", "e_rpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
-        BandSpec("i", "i_sdss", "ipmag", "e_ipmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
-        BandSpec("z", "z_sdss", "zpmag", "e_zpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("u", "u_sdss", ("upmag", "umag"), ("e_upmag", "e_umag"), "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("g", "g_sdss", ("gpmag", "gmag"), ("e_gpmag", "e_gmag"), "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("r", "r_sdss", ("rpmag", "rmag"), ("e_rpmag", "e_rmag"), "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("i", "i_sdss", ("ipmag", "imag"), ("e_ipmag", "e_imag"), "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("z", "z_sdss", ("zpmag", "zmag"), ("e_zpmag", "e_zmag"), "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
     ),
     "allwise": (
         BandSpec("W1", "W1", "W1mag", "e_W1mag", "vega", WISE_VEGA_ZEROPOINT_JY["W1"]),

@@ -173,6 +173,34 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
     assert legacy_g["photometry_method"] == "catalog"
 
 
+def test_sdss_dr16_uses_vizier_magnitude_column_names():
+    matches = {
+        "sdss_dr16": Table(
+            {
+                "source_id": ["src"],
+                "umag": [17.833],
+                "gmag": [16.611],
+                "rmag": [15.893],
+                "imag": [15.471],
+                "zmag": [15.220],
+                "e_umag": [0.015],
+                "e_gmag": [0.004],
+                "e_rmag": [0.003],
+                "e_imag": [0.003],
+                "e_zmag": [0.007],
+                "angDist": [0.32],
+            }
+        )
+    }
+
+    phot = matches_to_photometry(matches)
+
+    assert set(phot["filter_name"]) == {"u_sdss", "g_sdss", "r_sdss", "i_sdss", "z_sdss"}
+    sdss_u = phot[phot["filter_name"] == "u_sdss"][0]
+    assert np.isclose(sdss_u["mag"], 17.833)
+    assert sdss_u["photometry_method"] == "psf"
+
+
 def test_matches_to_photometry_deduplicates_by_distance_then_snr():
     matches = {
         "akari_irc": Table(

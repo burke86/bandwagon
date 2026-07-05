@@ -118,8 +118,9 @@ matches = xmatch_catalogs(
 photometry = matches_to_photometry(matches, min_quality=2)
 ```
 
-`sdss_dr16` is converted from PSF AB magnitudes (`psfMag_*`). `2mass` is
-converted from Vega magnitudes. AKARI and IRAS publish flux densities, so
+`sdss_dr16` is converted from the VizieR SDSS AB magnitude columns
+(`umag/gmag/rmag/imag/zmag`, with PSF aliases accepted when present). `2mass`
+is converted from Vega magnitudes. AKARI and IRAS publish flux densities, so
 Bandwagon converts Jy to mJy directly. IRAS uncertainty columns are percent flux
 uncertainties; AKARI uncertainty columns are Jy. Legacy Survey Tractor-style
 `FLUX_*`/`FLUX_IVAR_*` columns are AB nanomaggies, converted with `1 nanomaggy =
