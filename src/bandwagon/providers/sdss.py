@@ -28,10 +28,11 @@ SDSS_PSF_COLUMNS = (
 def enrich_sdss_psf_photometry(
     table: Table,
     *,
-    catalog: str = "V/154/sdss16",
+    catalog: str = "V/154/sdss16/sdss16",
     chunk_size: int = 500,
     cache: bool = True,
     vizier_cls=None,
+    sdss_cls=None,
 ) -> Table:
     """Attach SDSS PSF magnitude columns to an XMatch table using ``objID``.
 
@@ -51,13 +52,19 @@ def enrich_sdss_psf_photometry(
     if not objids:
         return out
 
-    psf_rows = _query_sdss_psf_by_objid(
+    psf_rows = _query_sdss_psf_by_sdss_objid(
         objids,
-        catalog=catalog,
         chunk_size=chunk_size,
-        cache=cache,
-        vizier_cls=vizier_cls,
+        sdss_cls=sdss_cls,
     )
+    if len(psf_rows) == 0:
+        psf_rows = _query_sdss_psf_by_vizier_objid(
+            objids,
+            catalog=catalog,
+            chunk_size=chunk_size,
+            cache=cache,
+            vizier_cls=vizier_cls,
+        )
     if len(psf_rows) == 0:
         return out
 
@@ -75,7 +82,30 @@ def enrich_sdss_psf_photometry(
     return out
 
 
-def _query_sdss_psf_by_objid(
+def _query_sdss_psf_by_sdss_objid(
+    objids: Sequence[str],
+    *,
+    chunk_size: int,
+    sdss_cls=None,
+) -> Table:
+    if sdss_cls is None:
+        from astroquery.sdss import SDSS
+
+        sdss_cls = SDSS
+
+    tables = []
+    columns = ["objID", *SDSS_PSF_COLUMNS]
+    for chunk in _chunks(list(objids), chunk_size):
+        query = _sdss_psf_sql(chunk)
+        result = sdss_cls.query_sql(query, data_release=17)
+        if result is not None and len(result) > 0:
+            tables.append(_normalize_sdss_sql_psf_table(result))
+    if not tables:
+        return Table(names=columns, dtype=[object, *([float] * len(SDSS_PSF_COLUMNS))])
+    return vstack(tables, metadata_conflicts="silent")
+
+
+def _query_sdss_psf_by_vizier_objid(
     objids: Sequence[str],
     *,
     catalog: str,
@@ -98,6 +128,32 @@ def _query_sdss_psf_by_objid(
     if not tables:
         return Table(names=columns, dtype=[object, *([float] * len(SDSS_PSF_COLUMNS))])
     return vstack(tables, metadata_conflicts="silent")
+
+
+def _sdss_psf_sql(objids: Sequence[str]) -> str:
+    objid_list = ",".join(str(int(objid)) for objid in objids)
+    return f"""
+SELECT p.objID,
+       p.psfMag_u AS upmag,
+       p.psfMag_g AS gpmag,
+       p.psfMag_r AS rpmag,
+       p.psfMag_i AS ipmag,
+       p.psfMag_z AS zpmag,
+       p.psfMagErr_u AS e_upmag,
+       p.psfMagErr_g AS e_gpmag,
+       p.psfMagErr_r AS e_rpmag,
+       p.psfMagErr_i AS e_ipmag,
+       p.psfMagErr_z AS e_zpmag
+FROM PhotoObjAll AS p
+WHERE p.objID IN ({objid_list})
+"""
+
+
+def _normalize_sdss_sql_psf_table(table: Table) -> Table:
+    out = Table()
+    for col in ["objID", *SDSS_PSF_COLUMNS]:
+        out[col] = table[col]
+    return out
 
 
 def _unique_objids(values) -> list[str]:
