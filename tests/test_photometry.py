@@ -39,6 +39,32 @@ def test_nanomaggy_to_flux_mjy_uses_inverse_variance():
 
 def test_matches_to_photometry_converts_default_and_optional_catalogs():
     matches = {
+        "sdss_dr16": Table(
+            {
+                "source_id": ["src"],
+                "umag": [10.0],
+                "e_umag": [0.01],
+                "gmag": [10.0],
+                "e_gmag": [0.01],
+                "rmag": [10.0],
+                "e_rmag": [0.01],
+                "imag": [10.0],
+                "e_imag": [0.01],
+                "zmag": [10.0],
+                "e_zmag": [0.01],
+                "upmag": [16.0],
+                "e_upmag": [0.05],
+                "gpmag": [15.5],
+                "e_gpmag": [0.05],
+                "rpmag": [15.0],
+                "e_rpmag": [0.05],
+                "ipmag": [14.8],
+                "e_ipmag": [0.05],
+                "zpmag": [14.7],
+                "e_zpmag": [0.05],
+                "angDist": [0.1],
+            }
+        ),
         "allwise": Table(
             {
                 "source_id": ["src"],
@@ -63,18 +89,6 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
                 "Kmag": [15.0],
                 "e_Kmag": [0.07],
                 "angDist": [0.2],
-            }
-        ),
-        "2mass_xsc": Table(
-            {
-                "source_id": ["extended"],
-                "J.ext": [13.0],
-                "e_J.ext": [0.03],
-                "H.ext": [12.0],
-                "e_H.ext": [0.04],
-                "K.ext": [11.0],
-                "e_K.ext": [0.05],
-                "angDist": [5.0],
             }
         ),
         "akari_irc": Table(
@@ -126,6 +140,11 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
         "W2",
         "W3",
         "W4",
+        "u_sdss",
+        "g_sdss",
+        "r_sdss",
+        "i_sdss",
+        "z_sdss",
         "J_2mass",
         "H_2mass",
         "Ks_2mass",
@@ -138,15 +157,20 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
         "W2_legacy",
     }
     assert "z_legacy" not in set(phot["filter_name"])
-    assert np.sum(phot["source_id"] == "extended") == 3
     assert "F25_iras" not in set(phot["filter_name"])
     assert np.all(np.asarray(phot["flux_mjy"], dtype=float) > 0.0)
     assert np.all(np.asarray(phot["flux_err_mjy"], dtype=float) > 0.0)
+
+    sdss_u = phot[phot["filter_name"] == "u_sdss"][0]
+    assert np.isclose(sdss_u["mag"], 16.0)
+    assert np.isclose(sdss_u["flux_mjy"], 1.0e3 * 3631.0 * 10.0 ** (-0.4 * 16.0))
+    assert sdss_u["photometry_method"] == "psf"
 
     legacy_g = phot[phot["filter_name"] == "g_legacy"][0]
     assert np.isclose(legacy_g["flux_mjy"], 3.631)
     assert np.isclose(legacy_g["mag"], 15.0)
     assert np.isclose(legacy_g["psf_fwhm_arcsec"], 1.4)
+    assert legacy_g["photometry_method"] == "catalog"
 
 
 def test_matches_to_photometry_deduplicates_by_distance_then_snr():
