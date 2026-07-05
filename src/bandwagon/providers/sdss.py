@@ -1,12 +1,187 @@
-"""SDSS/BOSS/eBOSS spectra metadata discovery."""
+"""SDSS/BOSS/eBOSS metadata and PSF photometry discovery."""
 
 from __future__ import annotations
+
+from collections.abc import Sequence
 
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.table import Table, vstack
 
 from ..spectra import as_float, as_str, first_col, rows_to_table, source_table_from_coords
+
+SDSS_PSF_COLUMNS = (
+    "upmag",
+    "gpmag",
+    "rpmag",
+    "ipmag",
+    "zpmag",
+    "e_upmag",
+    "e_gpmag",
+    "e_rpmag",
+    "e_ipmag",
+    "e_zpmag",
+)
+
+
+def enrich_sdss_psf_photometry(
+    table: Table,
+    *,
+    catalog: str = "V/154/sdss16/sdss16",
+    chunk_size: int = 500,
+    cache: bool = True,
+    vizier_cls=None,
+    sdss_cls=None,
+) -> Table:
+    """Attach SDSS PSF magnitude columns to an XMatch table using ``objID``.
+
+    CDS XMatch exposes only the compact SDSS model-magnitude view for
+    ``V/154/sdss16``. The full VizieR table has PSF columns, so we use the
+    XMatch ``objID`` results as a fast spatial pre-match and fetch PSF columns
+    by identifier in batches.
+    """
+
+    out = table.copy(copy_data=True)
+    if len(out) == 0 or "objID" not in out.colnames:
+        return out
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive.")
+
+    objids = _unique_objids(out["objID"])
+    if not objids:
+        return out
+
+    psf_rows = _query_sdss_psf_by_sdss_objid(
+        objids,
+        chunk_size=chunk_size,
+        sdss_cls=sdss_cls,
+    )
+    if len(psf_rows) == 0:
+        psf_rows = _query_sdss_psf_by_vizier_objid(
+            objids,
+            catalog=catalog,
+            chunk_size=chunk_size,
+            cache=cache,
+            vizier_cls=vizier_cls,
+        )
+    if len(psf_rows) == 0:
+        return out
+
+    psf_by_objid = {_objid_key(row["objID"]): row for row in psf_rows if _objid_key(row["objID"])}
+    for col in SDSS_PSF_COLUMNS:
+        values = np.full(len(out), np.nan, dtype=float)
+        for i, row in enumerate(out):
+            psf_row = psf_by_objid.get(_objid_key(row["objID"]))
+            if psf_row is not None and col in psf_row.colnames:
+                values[i] = as_float(psf_row[col])
+        if col in out.colnames:
+            out[col] = values
+        else:
+            out.add_column(values, name=col)
+    return out
+
+
+def _query_sdss_psf_by_sdss_objid(
+    objids: Sequence[str],
+    *,
+    chunk_size: int,
+    sdss_cls=None,
+) -> Table:
+    if sdss_cls is None:
+        from astroquery.sdss import SDSS
+
+        sdss_cls = SDSS
+
+    tables = []
+    columns = ["objID", *SDSS_PSF_COLUMNS]
+    for chunk in _chunks(list(objids), chunk_size):
+        query = _sdss_psf_sql(chunk)
+        result = sdss_cls.query_sql(query, data_release=17)
+        if result is not None and len(result) > 0:
+            tables.append(_normalize_sdss_sql_psf_table(result))
+    if not tables:
+        return Table(names=columns, dtype=[object, *([float] * len(SDSS_PSF_COLUMNS))])
+    return vstack(tables, metadata_conflicts="silent")
+
+
+def _query_sdss_psf_by_vizier_objid(
+    objids: Sequence[str],
+    *,
+    catalog: str,
+    chunk_size: int,
+    cache: bool,
+    vizier_cls=None,
+) -> Table:
+    if vizier_cls is None:
+        from astroquery.vizier import Vizier
+
+        vizier_cls = Vizier
+
+    tables = []
+    columns = ["objID", *SDSS_PSF_COLUMNS]
+    for chunk in _chunks(list(objids), chunk_size):
+        vizier = vizier_cls(columns=columns, row_limit=-1)
+        result = vizier.query_constraints(catalog=catalog, objID=",".join(chunk), cache=cache)
+        if result:
+            tables.append(result[0])
+    if not tables:
+        return Table(names=columns, dtype=[object, *([float] * len(SDSS_PSF_COLUMNS))])
+    return vstack(tables, metadata_conflicts="silent")
+
+
+def _sdss_psf_sql(objids: Sequence[str]) -> str:
+    objid_list = ",".join(str(int(objid)) for objid in objids)
+    return f"""
+SELECT p.objID,
+       p.psfMag_u AS upmag,
+       p.psfMag_g AS gpmag,
+       p.psfMag_r AS rpmag,
+       p.psfMag_i AS ipmag,
+       p.psfMag_z AS zpmag,
+       p.psfMagErr_u AS e_upmag,
+       p.psfMagErr_g AS e_gpmag,
+       p.psfMagErr_r AS e_rpmag,
+       p.psfMagErr_i AS e_ipmag,
+       p.psfMagErr_z AS e_zpmag
+FROM PhotoObjAll AS p
+WHERE p.objID IN ({objid_list})
+"""
+
+
+def _normalize_sdss_sql_psf_table(table: Table) -> Table:
+    out = Table()
+    for col in ["objID", *SDSS_PSF_COLUMNS]:
+        out[col] = table[col]
+    return out
+
+
+def _unique_objids(values) -> list[str]:
+    seen = set()
+    objids = []
+    for value in values:
+        key = _objid_key(value)
+        if key and key not in seen:
+            seen.add(key)
+            objids.append(key)
+    return objids
+
+
+def _objid_key(value) -> str:
+    if np.ma.is_masked(value):
+        return ""
+    text = str(value).strip()
+    if not text or text == "--":
+        return ""
+    try:
+        return str(int(text))
+    except ValueError:
+        return text
+
+
+def _chunks(values: list[str], chunk_size: int):
+    for start in range(0, len(values), chunk_size):
+        yield values[start : start + chunk_size]
 
 
 def query_sdss_spectra(

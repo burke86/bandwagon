@@ -99,6 +99,7 @@ class BandSpec:
     err_col: str | Sequence[str]
     system: str
     zero_jy: float
+    photometry_method: str = "catalog"
 
 
 @dataclass(frozen=True)
@@ -130,11 +131,11 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
         BandSpec("NUV", "NUV_galex", "NUVmag", "e_NUVmag", "ab", AB_ZEROPOINT_JY),
     ),
     "sdss_dr16": (
-        BandSpec("u", "u_sdss", "umag", "e_umag", "ab", AB_ZEROPOINT_JY),
-        BandSpec("g", "g_sdss", "gmag", "e_gmag", "ab", AB_ZEROPOINT_JY),
-        BandSpec("r", "r_sdss", "rmag", "e_rmag", "ab", AB_ZEROPOINT_JY),
-        BandSpec("i", "i_sdss", "imag", "e_imag", "ab", AB_ZEROPOINT_JY),
-        BandSpec("z", "z_sdss", "zmag", "e_zmag", "ab", AB_ZEROPOINT_JY),
+        BandSpec("u", "u_sdss", "upmag", "e_upmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("g", "g_sdss", "gpmag", "e_gpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("r", "r_sdss", "rpmag", "e_rpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("i", "i_sdss", "ipmag", "e_ipmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("z", "z_sdss", "zpmag", "e_zpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
     ),
     "allwise": (
         BandSpec("W1", "W1", "W1mag", "e_W1mag", "vega", WISE_VEGA_ZEROPOINT_JY["W1"]),
@@ -146,11 +147,6 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
         BandSpec("J", "J_2mass", "Jmag", "e_Jmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"]),
         BandSpec("H", "H_2mass", "Hmag", "e_Hmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"]),
         BandSpec("Ks", "Ks_2mass", "Kmag", "e_Kmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"]),
-    ),
-    "2mass_xsc": (
-        BandSpec("J.ext", "J_2mass", ("J.ext", "Jmag"), ("e_J.ext", "e_Jmag"), "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"]),
-        BandSpec("H.ext", "H_2mass", ("H.ext", "Hmag"), ("e_H.ext", "e_Hmag"), "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"]),
-        BandSpec("K.ext", "Ks_2mass", ("K.ext", "Kmag"), ("e_K.ext", "e_Kmag"), "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"]),
     ),
 }
 
@@ -331,6 +327,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": PSF_FWHM_ARCSEC[spec.filter_name],
+                    "photometry_method": spec.photometry_method,
                     "match_distance_arcsec": distance_arcsec,
                 }
             )
@@ -361,6 +358,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": PSF_FWHM_ARCSEC[spec.filter_name],
+                    "photometry_method": "catalog",
                     "match_distance_arcsec": distance_arcsec,
                 }
             )
@@ -389,6 +387,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": _row_psf_fwhm(row, table.colnames, spec),
+                    "photometry_method": "catalog",
                     "match_distance_arcsec": distance_arcsec,
                 }
             )
@@ -501,6 +500,7 @@ def _empty_photometry_table() -> Table:
             "flux_mjy",
             "flux_err_mjy",
             "psf_fwhm_arcsec",
+            "photometry_method",
             "match_distance_arcsec",
         ],
         dtype=[
@@ -515,6 +515,7 @@ def _empty_photometry_table() -> Table:
             float,
             float,
             float,
+            "U16",
             float,
         ],
     )

@@ -74,15 +74,15 @@ SIMBAD redshift queries return a separate long-form table with `source_id`,
 conflicting redshift candidates can be inspected before selecting one.
 
 Spectra queries are opt-in and return metadata/index rows; they do not download
-spectra by default. Supported providers are `desi`, `sdss`, `lamost`, `6dfgs`,
-and `mast`. DESI uses SPARCL and requires the optional spectra extra:
+spectra by default. Supported providers are `desi`, `sdss`, `gama`, `lamost`,
+`6dfgs`, and `mast`. DESI uses SPARCL and requires the optional spectra extra:
 
 ```bash
 python -m pip install -e ".[spectra]"
 ```
 
-LAMOST and 6dFGS are metadata-first VizieR XMatch providers. SDSS and MAST use
-`astroquery`. Bandwagon does not use `pyvo`.
+GAMA, LAMOST, and 6dFGS are metadata-first VizieR XMatch providers. SDSS and
+MAST use `astroquery`. Bandwagon does not use `pyvo`.
 
 The default catalog set is:
 
@@ -91,7 +91,6 @@ The default catalog set is:
 | `galex_ais` | `II/335/galex_ais` | `FUV`, `NUV` | `3.0"` |
 | `sdss_dr16` | `V/154/sdss16` | `u`, `g`, `r`, `i`, `z` | `1.0"` |
 | `2mass` | `II/246/out` | `J`, `H`, `Ks` | `2.0"` |
-| `2mass_xsc` | `VII/233/xsc` | `J.ext`, `H.ext`, `K.ext` | `2.0"` |
 | `allwise` | `II/328/allwise` | `W1`, `W2`, `W3`, `W4` | `3.0"` |
 | `legacy_dr8_north` | `VII/292/north` | Legacy DR8 photo-z fields; `grzW1W2` if Tractor-style flux columns are present | `1.0"` |
 | `legacy_dr8_south` | `VII/292/south` | Legacy DR8 photo-z fields; `grzW1W2` if Tractor-style flux columns are present | `1.0"` |
@@ -119,14 +118,18 @@ matches = xmatch_catalogs(
 photometry = matches_to_photometry(matches, min_quality=2)
 ```
 
-`2mass` is converted from Vega magnitudes. AKARI and IRAS publish flux
-densities, so Bandwagon converts Jy to mJy directly. IRAS uncertainty columns
-are percent flux uncertainties; AKARI uncertainty columns are Jy. Legacy Survey
-Tractor-style `FLUX_*`/`FLUX_IVAR_*` columns are AB nanomaggies, converted with
-`1 nanomaggy = 0.003631 mJy`; non-positive fluxes or inverse variances are
-dropped. These rows use distinct filter names (`g_legacy`, `r_legacy`,
-`z_legacy`, `W1_legacy`, `W2_legacy`) so they do not overwrite SDSS or AllWISE
-measurements.
+`sdss_dr16` is converted only from SDSS PSF AB magnitudes
+(`upmag/gpmag/rpmag/ipmag/zpmag`, corresponding to `psfMag_*`). The CDS XMatch
+view exposes SDSS model magnitudes, so `xmatch_catalogs()` enriches SDSS matches
+by querying the full VizieR table in batches by matched `objID`; SDSS model
+magnitude columns are intentionally ignored. `2mass` is converted from Vega
+magnitudes. AKARI and IRAS publish flux densities, so Bandwagon converts Jy to
+mJy directly. IRAS uncertainty columns are percent flux uncertainties; AKARI
+uncertainty columns are Jy. Legacy Survey Tractor-style `FLUX_*`/`FLUX_IVAR_*`
+columns are AB nanomaggies, converted with `1 nanomaggy = 0.003631 mJy`;
+non-positive fluxes or inverse variances are dropped. These rows use distinct
+filter names (`g_legacy`, `r_legacy`, `z_legacy`, `W1_legacy`, `W2_legacy`) so
+they do not overwrite SDSS or AllWISE measurements.
 
 DESI/Legacy Survey aliases are available for VizieR's DR8 north/south
 photometric redshift tables. The VizieR `VII/292` tables themselves are photo-z

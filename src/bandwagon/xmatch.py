@@ -22,7 +22,6 @@ SourceInput = SkyCoord | Table
 
 COMMON_CATALOGS: dict[str, str] = {
     "2mass": "II/246/out",
-    "2mass_xsc": "VII/233/xsc",
     "akari_fis": "II/298/fis",
     "akari_irc": "II/297/irc",
     "allwise": "II/328/allwise",
@@ -34,7 +33,6 @@ COMMON_CATALOGS: dict[str, str] = {
     "legacy_dr8_north": "VII/292/north",
     "legacy_dr8_south": "VII/292/south",
     "sdss_dr16": "V/154/sdss16",
-    "twomass_xsc": "VII/233/xsc",
     "wise": "II/328/allwise",
 }
 
@@ -42,7 +40,6 @@ DEFAULT_CATALOGS: dict[str, str] = {
     "galex_ais": "II/335/galex_ais",
     "sdss_dr16": "V/154/sdss16",
     "2mass": "II/246/out",
-    "2mass_xsc": "VII/233/xsc",
     "allwise": "II/328/allwise",
     "legacy_dr8_north": "VII/292/north",
     "legacy_dr8_south": "VII/292/south",
@@ -53,7 +50,6 @@ DEFAULT_RADII_ARCSEC: dict[str, float] = {
     "sdss_dr16": 1.0,
     "allwise": 3.0,
     "2mass": 2.0,
-    "2mass_xsc": 2.0,
     "legacy_dr8_north": 1.0,
     "legacy_dr8_south": 1.0,
     "akari_irc": 6.0,
@@ -66,7 +62,6 @@ CATALOG_BANDS: dict[str, tuple[str, ...]] = {
     "sdss_dr16": ("u", "g", "r", "i", "z"),
     "allwise": ("W1", "W2", "W3", "W4"),
     "2mass": ("J", "H", "Ks"),
-    "2mass_xsc": ("J.ext", "H.ext", "K.ext"),
     "akari_irc": ("S9W", "L18W"),
     "akari_fis": ("N60", "WIDE-S", "WIDE-L", "N160"),
     "iras_psc": ("F12", "F25", "F60", "F100"),
@@ -208,6 +203,8 @@ def xmatch_catalogs(
     ra_col: str = "ra",
     dec_col: str = "dec",
     cache: bool = True,
+    enrich_sdss_psf: bool = True,
+    sdss_psf_chunk_size: int = 500,
 ) -> dict[str, Table]:
     """Cross-match source coordinates against several VizieR catalogs.
 
@@ -223,6 +220,11 @@ def xmatch_catalogs(
     radius_arcsec
         One radius for all catalogs, or a mapping of output name to radius. If
         omitted, per-catalog defaults are used.
+    enrich_sdss_psf
+        When True, enrich SDSS DR16 XMatch rows with PSF magnitude columns by
+        querying the full VizieR table by matched ``objID``.
+    sdss_psf_chunk_size
+        Number of matched SDSS ``objID`` values to request per enrichment query.
     """
 
     if catalogs is None:
@@ -240,8 +242,9 @@ def xmatch_catalogs(
     )
 
     jobs = _match_jobs(catalogs, radius_arcsec=radius_arcsec)
-    return {
-        job.name: xmatch_catalog(
+    results = {}
+    for job in jobs:
+        table = xmatch_catalog(
             source_table,
             job.catalog,
             radius_arcsec=job.radius_arcsec,
@@ -249,8 +252,12 @@ def xmatch_catalogs(
             dec_col=dec_col,
             cache=cache,
         )
-        for job in jobs
-    }
+        if enrich_sdss_psf and _is_sdss_dr16_job(job):
+            from .providers.sdss import enrich_sdss_psf_photometry
+
+            table = enrich_sdss_psf_photometry(table, chunk_size=sdss_psf_chunk_size, cache=cache)
+        results[job.name] = table
+    return results
 
 
 def _source_table(
@@ -310,6 +317,11 @@ def _match_jobs(
         jobs.append(MatchJob(name=name, catalog=catalog, radius_arcsec=radius))
 
     return jobs
+
+
+def _is_sdss_dr16_job(job: MatchJob) -> bool:
+    catalog = COMMON_CATALOGS.get(job.catalog.lower(), job.catalog).lower()
+    return job.name.lower() == "sdss_dr16" or catalog in {"v/154/sdss16", "vizier:v/154/sdss16"}
 
 
 def _match_radius(

@@ -13,6 +13,7 @@ from .photometry import (
     matches_to_photometry,
     nanomaggy_to_flux_mjy,
 )
+from .providers.sdss import enrich_sdss_psf_photometry
 from .redshift import query_simbad_redshifts, select_best_redshift
 from .spectra import empty_spectra_table, query_archival_spectra
 from .xmatch import (
@@ -43,6 +44,7 @@ __all__ = [
     "XMatchError",
     "coords_to_source_table",
     "empty_spectra_table",
+    "enrich_sdss_psf_photometry",
     "jy_to_flux_mjy",
     "magnitude_to_flux_mjy",
     "make_source_table",

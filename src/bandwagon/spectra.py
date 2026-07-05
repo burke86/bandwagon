@@ -151,6 +151,10 @@ def _provider_function(provider: str):
         from .providers.lamost import query_lamost_spectra
 
         return query_lamost_spectra
+    if provider in {"gama", "gama_dr3"}:
+        from .providers.gama import query_gama_spectra
+
+        return query_gama_spectra
     if provider in {"6dfgs", "sixdfgs"}:
         from .providers.sixdfgs import query_6dfgs_spectra
 
