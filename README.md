@@ -118,15 +118,16 @@ matches = xmatch_catalogs(
 photometry = matches_to_photometry(matches, min_quality=2)
 ```
 
-`sdss_dr16` is converted from the VizieR SDSS AB magnitude columns
-(`umag/gmag/rmag/imag/zmag`, with PSF aliases accepted when present). `2mass`
-is converted from Vega magnitudes. AKARI and IRAS publish flux densities, so
-Bandwagon converts Jy to mJy directly. IRAS uncertainty columns are percent flux
-uncertainties; AKARI uncertainty columns are Jy. Legacy Survey Tractor-style
-`FLUX_*`/`FLUX_IVAR_*` columns are AB nanomaggies, converted with `1 nanomaggy =
-0.003631 mJy`; non-positive fluxes or inverse variances are dropped. These rows
-use distinct filter names (`g_legacy`, `r_legacy`, `z_legacy`, `W1_legacy`,
-`W2_legacy`) so they do not overwrite SDSS or AllWISE measurements.
+`sdss_dr16` is converted only from SDSS PSF AB magnitudes
+(`upmag/gpmag/rpmag/ipmag/zpmag`, corresponding to `psfMag_*`). SDSS model
+magnitude columns are intentionally ignored. `2mass` is converted from Vega
+magnitudes. AKARI and IRAS publish flux densities, so Bandwagon converts Jy to
+mJy directly. IRAS uncertainty columns are percent flux uncertainties; AKARI
+uncertainty columns are Jy. Legacy Survey Tractor-style `FLUX_*`/`FLUX_IVAR_*`
+columns are AB nanomaggies, converted with `1 nanomaggy = 0.003631 mJy`;
+non-positive fluxes or inverse variances are dropped. These rows use distinct
+filter names (`g_legacy`, `r_legacy`, `z_legacy`, `W1_legacy`, `W2_legacy`) so
+they do not overwrite SDSS or AllWISE measurements.
 
 DESI/Legacy Survey aliases are available for VizieR's DR8 north/south
 photometric redshift tables. The VizieR `VII/292` tables themselves are photo-z

@@ -173,7 +173,7 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
     assert legacy_g["photometry_method"] == "catalog"
 
 
-def test_sdss_dr16_uses_vizier_magnitude_column_names():
+def test_sdss_dr16_ignores_model_magnitude_column_names():
     matches = {
         "sdss_dr16": Table(
             {
@@ -195,10 +195,7 @@ def test_sdss_dr16_uses_vizier_magnitude_column_names():
 
     phot = matches_to_photometry(matches)
 
-    assert set(phot["filter_name"]) == {"u_sdss", "g_sdss", "r_sdss", "i_sdss", "z_sdss"}
-    sdss_u = phot[phot["filter_name"] == "u_sdss"][0]
-    assert np.isclose(sdss_u["mag"], 17.833)
-    assert sdss_u["photometry_method"] == "psf"
+    assert len(phot) == 0
 
 
 def test_matches_to_photometry_deduplicates_by_distance_then_snr():
