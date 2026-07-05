@@ -203,6 +203,8 @@ def xmatch_catalogs(
     ra_col: str = "ra",
     dec_col: str = "dec",
     cache: bool = True,
+    enrich_sdss_psf: bool = True,
+    sdss_psf_chunk_size: int = 500,
 ) -> dict[str, Table]:
     """Cross-match source coordinates against several VizieR catalogs.
 
@@ -218,6 +220,11 @@ def xmatch_catalogs(
     radius_arcsec
         One radius for all catalogs, or a mapping of output name to radius. If
         omitted, per-catalog defaults are used.
+    enrich_sdss_psf
+        When True, enrich SDSS DR16 XMatch rows with PSF magnitude columns by
+        querying the full VizieR table by matched ``objID``.
+    sdss_psf_chunk_size
+        Number of matched SDSS ``objID`` values to request per enrichment query.
     """
 
     if catalogs is None:
@@ -235,8 +242,9 @@ def xmatch_catalogs(
     )
 
     jobs = _match_jobs(catalogs, radius_arcsec=radius_arcsec)
-    return {
-        job.name: xmatch_catalog(
+    results = {}
+    for job in jobs:
+        table = xmatch_catalog(
             source_table,
             job.catalog,
             radius_arcsec=job.radius_arcsec,
@@ -244,8 +252,12 @@ def xmatch_catalogs(
             dec_col=dec_col,
             cache=cache,
         )
-        for job in jobs
-    }
+        if enrich_sdss_psf and _is_sdss_dr16_job(job):
+            from .providers.sdss import enrich_sdss_psf_photometry
+
+            table = enrich_sdss_psf_photometry(table, chunk_size=sdss_psf_chunk_size, cache=cache)
+        results[job.name] = table
+    return results
 
 
 def _source_table(
@@ -305,6 +317,11 @@ def _match_jobs(
         jobs.append(MatchJob(name=name, catalog=catalog, radius_arcsec=radius))
 
     return jobs
+
+
+def _is_sdss_dr16_job(job: MatchJob) -> bool:
+    catalog = COMMON_CATALOGS.get(job.catalog.lower(), job.catalog).lower()
+    return job.name.lower() == "sdss_dr16" or catalog in {"v/154/sdss16", "vizier:v/154/sdss16"}
 
 
 def _match_radius(

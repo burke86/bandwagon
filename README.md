@@ -119,7 +119,9 @@ photometry = matches_to_photometry(matches, min_quality=2)
 ```
 
 `sdss_dr16` is converted only from SDSS PSF AB magnitudes
-(`upmag/gpmag/rpmag/ipmag/zpmag`, corresponding to `psfMag_*`). SDSS model
+(`upmag/gpmag/rpmag/ipmag/zpmag`, corresponding to `psfMag_*`). The CDS XMatch
+view exposes SDSS model magnitudes, so `xmatch_catalogs()` enriches SDSS matches
+by querying the full VizieR table in batches by matched `objID`; SDSS model
 magnitude columns are intentionally ignored. `2mass` is converted from Vega
 magnitudes. AKARI and IRAS publish flux densities, so Bandwagon converts Jy to
 mJy directly. IRAS uncertainty columns are percent flux uncertainties; AKARI
