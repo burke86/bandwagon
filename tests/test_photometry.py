@@ -166,6 +166,12 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
     assert np.isclose(sdss_u["flux_mjy"], 1.0e3 * 3631.0 * 10.0 ** (-0.4 * 16.0))
     assert sdss_u["photometry_method"] == "psf"
 
+    j_2mass = phot[(phot["source_id"] == "src") & (phot["filter_name"] == "J_2mass")][0]
+    assert j_2mass["photometry_method"] == "psf"
+
+    w1 = phot[phot["filter_name"] == "W1"][0]
+    assert w1["photometry_method"] == "profile"
+
     legacy_g = phot[phot["filter_name"] == "g_legacy"][0]
     assert np.isclose(legacy_g["flux_mjy"], 3.631)
     assert np.isclose(legacy_g["mag"], 15.0)

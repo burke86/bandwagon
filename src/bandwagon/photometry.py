@@ -127,8 +127,8 @@ class NanomaggyBandSpec:
 
 CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
     "galex_ais": (
-        BandSpec("FUV", "FUV_galex", "FUVmag", "e_FUVmag", "ab", AB_ZEROPOINT_JY),
-        BandSpec("NUV", "NUV_galex", "NUVmag", "e_NUVmag", "ab", AB_ZEROPOINT_JY),
+        BandSpec("FUV", "FUV_galex", "FUVmag", "e_FUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("NUV", "NUV_galex", "NUVmag", "e_NUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
     ),
     "sdss_dr16": (
         BandSpec("u", "u_sdss", "upmag", "e_upmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
@@ -138,15 +138,15 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
         BandSpec("z", "z_sdss", "zpmag", "e_zpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
     ),
     "allwise": (
-        BandSpec("W1", "W1", "W1mag", "e_W1mag", "vega", WISE_VEGA_ZEROPOINT_JY["W1"]),
-        BandSpec("W2", "W2", "W2mag", "e_W2mag", "vega", WISE_VEGA_ZEROPOINT_JY["W2"]),
-        BandSpec("W3", "W3", "W3mag", "e_W3mag", "vega", WISE_VEGA_ZEROPOINT_JY["W3"]),
-        BandSpec("W4", "W4", "W4mag", "e_W4mag", "vega", WISE_VEGA_ZEROPOINT_JY["W4"]),
+        BandSpec("W1", "W1", "W1mag", "e_W1mag", "vega", WISE_VEGA_ZEROPOINT_JY["W1"], photometry_method="profile"),
+        BandSpec("W2", "W2", "W2mag", "e_W2mag", "vega", WISE_VEGA_ZEROPOINT_JY["W2"], photometry_method="profile"),
+        BandSpec("W3", "W3", "W3mag", "e_W3mag", "vega", WISE_VEGA_ZEROPOINT_JY["W3"], photometry_method="profile"),
+        BandSpec("W4", "W4", "W4mag", "e_W4mag", "vega", WISE_VEGA_ZEROPOINT_JY["W4"], photometry_method="profile"),
     ),
     "2mass": (
-        BandSpec("J", "J_2mass", "Jmag", "e_Jmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"]),
-        BandSpec("H", "H_2mass", "Hmag", "e_Hmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"]),
-        BandSpec("Ks", "Ks_2mass", "Kmag", "e_Kmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"]),
+        BandSpec("J", "J_2mass", "Jmag", "e_Jmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"], photometry_method="psf"),
+        BandSpec("H", "H_2mass", "Hmag", "e_Hmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"], photometry_method="psf"),
+        BandSpec("Ks", "Ks_2mass", "Kmag", "e_Kmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"], photometry_method="psf"),
     ),
 }
 
