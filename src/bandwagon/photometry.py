@@ -112,6 +112,8 @@ class FluxBandSpec:
     err_col: str
     quality_col: str | None = None
     err_is_percent: bool = False
+    scale_to_mjy: float = 1.0e3
+    photometry_method: str = "catalog"
 
 
 @dataclass(frozen=True)
@@ -126,10 +128,6 @@ class NanomaggyBandSpec:
 
 
 CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
-    "galex_ais": (
-        BandSpec("FUV", "FUV_galex", "FUVmag", "e_FUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
-        BandSpec("NUV", "NUV_galex", "NUVmag", "e_NUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
-    ),
     "sdss_dr16": (
         BandSpec("u", "u_sdss", "upmag", "e_upmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
         BandSpec("g", "g_sdss", "gpmag", "e_gpmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
@@ -151,6 +149,16 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
 }
 
 CATALOG_FLUX_SPECS: dict[str, tuple[FluxBandSpec, ...]] = {
+    "galex_ais": (
+        FluxBandSpec(
+            "FUV", "FUV_galex", "fuv_flux", "fuv_fluxerr",
+            scale_to_mjy=1.0e-3, photometry_method="auto",
+        ),
+        FluxBandSpec(
+            "NUV", "NUV_galex", "nuv_flux", "nuv_fluxerr",
+            scale_to_mjy=1.0e-3, photometry_method="auto",
+        ),
+    ),
     "akari_irc": (
         FluxBandSpec("S9W", "S9W_akari", "S09", "e_S09", quality_col="q_S09"),
         FluxBandSpec("L18W", "L18W_akari", "S18", "e_S18", quality_col="q_S18"),
@@ -338,11 +346,12 @@ def _catalog_to_photometry(
                 continue
             flux_jy = _as_float(row[spec.flux_col])
             err_value = _as_float(row[spec.err_col])
-            flux_mjy, flux_err_mjy = jy_to_flux_mjy(
-                flux_jy,
-                err_value,
-                err_is_percent=spec.err_is_percent,
-            )
+            if spec.err_is_percent:
+                flux_mjy = flux_jy * spec.scale_to_mjy
+                flux_err_mjy = flux_mjy * err_value / 100.0
+            else:
+                flux_mjy = flux_jy * spec.scale_to_mjy
+                flux_err_mjy = err_value * spec.scale_to_mjy
             if not np.isfinite(flux_mjy) or not np.isfinite(flux_err_mjy) or flux_mjy <= 0.0:
                 continue
             rows.append(
@@ -358,7 +367,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": PSF_FWHM_ARCSEC[spec.filter_name],
-                    "photometry_method": "catalog",
+                    "photometry_method": spec.photometry_method,
                     "match_distance_arcsec": distance_arcsec,
                 }
             )

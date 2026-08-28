@@ -33,6 +33,10 @@ def test_coords_to_source_table_validates_source_id_length():
 
 
 def test_normalize_vizier_catalog_resolves_aliases():
+    assert normalize_vizier_catalog("galex") == "vizier:II/335/galex_ais"
+    assert normalize_vizier_catalog("galex_ais") == "vizier:II/335/galex_ais"
+    assert normalize_vizier_catalog("galex_ais_gr5") == "vizier:II/312/ais"
+    assert normalize_vizier_catalog("galex_ais_gr67") == "vizier:II/335/galex_ais"
     assert normalize_vizier_catalog("2mass") == "vizier:II/246/out"
     assert normalize_vizier_catalog("akari_irc") == "vizier:II/297/irc"
     assert normalize_vizier_catalog("akari_fis") == "vizier:II/298/fis"
@@ -41,6 +45,7 @@ def test_normalize_vizier_catalog_resolves_aliases():
 
 
 def test_default_catalogs_include_2mass():
+    assert DEFAULT_CATALOGS["galex_ais"] == "II/312/ais"
     assert DEFAULT_CATALOGS["2mass"] == "II/246/out"
     assert DEFAULT_CATALOGS["legacy_dr8_north"] == "VII/292/north"
     assert DEFAULT_CATALOGS["legacy_dr8_south"] == "VII/292/south"

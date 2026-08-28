@@ -204,6 +204,30 @@ def test_sdss_dr16_ignores_model_magnitude_column_names():
     assert len(phot) == 0
 
 
+def test_matches_to_photometry_accepts_galex_gr5_column_names():
+    matches = {
+        "galex_ais": Table(
+            {
+                "source_id": ["src"],
+                "fuv_flux": [15.2313],
+                "fuv_fluxerr": [3.05895],
+                "nuv_flux": [37.3678],
+                "nuv_fluxerr": [3.40028],
+                "angDist": [0.46],
+            }
+        )
+    }
+
+    phot = matches_to_photometry(matches)
+
+    assert set(phot["filter_name"]) == {"FUV_galex", "NUV_galex"}
+    assert set(phot["photometry_method"]) == {"auto"}
+    assert np.isclose(phot[phot["filter_name"] == "FUV_galex"]["flux_mjy"][0], 0.0152313)
+    assert np.isclose(phot[phot["filter_name"] == "NUV_galex"]["flux_mjy"][0], 0.0373678)
+    assert np.all(np.asarray(phot["flux_mjy"], dtype=float) > 0.0)
+    assert np.all(np.asarray(phot["flux_err_mjy"], dtype=float) > 0.0)
+
+
 def test_matches_to_photometry_deduplicates_by_distance_then_snr():
     matches = {
         "akari_irc": Table(
