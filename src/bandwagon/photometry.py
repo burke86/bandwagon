@@ -127,8 +127,8 @@ class NanomaggyBandSpec:
 
 CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
     "galex_ais": (
-        BandSpec("FUV", "FUV_galex", "FUVmag", "e_FUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
-        BandSpec("NUV", "NUV_galex", "NUVmag", "e_NUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),
+        BandSpec("FUV", "FUV_galex", "FUVmag", "e_FUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="auto"),
+        BandSpec("NUV", "NUV_galex", "NUVmag", "e_NUVmag", "ab", AB_ZEROPOINT_JY, photometry_method="auto"),
     ),
     "sdss_dr16": (
         BandSpec("u", "u_sdss", "upmag", "e_upmag", "ab", AB_ZEROPOINT_JY, photometry_method="psf"),

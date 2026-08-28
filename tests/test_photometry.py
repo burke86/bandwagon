@@ -37,6 +37,29 @@ def test_nanomaggy_to_flux_mjy_uses_inverse_variance():
     assert np.isnan(err)
 
 
+def test_galex_ais_uses_auto_photometry_semantics():
+    matches = {
+        "galex_ais": Table(
+            {
+                "source_id": ["src"],
+                "FUVmag": [20.946],
+                "e_FUVmag": [0.218],
+                "NUVmag": [19.967],
+                "e_NUVmag": [0.099],
+                "angDist": [0.466],
+            }
+        )
+    }
+
+    phot = matches_to_photometry(matches)
+
+    assert set(phot["filter_name"]) == {"FUV_galex", "NUV_galex"}
+    assert set(phot["photometry_method"]) == {"auto"}
+    for filter_name, magnitude in (("FUV_galex", 20.946), ("NUV_galex", 19.967)):
+        row = phot[phot["filter_name"] == filter_name][0]
+        assert np.isclose(row["flux_mjy"], 1.0e3 * 3631.0 * 10.0 ** (-0.4 * magnitude))
+
+
 def test_matches_to_photometry_converts_default_and_optional_catalogs():
     matches = {
         "sdss_dr16": Table(
