@@ -29,6 +29,8 @@ COMMON_CATALOGS: dict[str, str] = {
     "desi_legacy_dr8_south": "VII/292/south",
     "galex": "II/335/galex_ais",
     "galex_ais": "II/335/galex_ais",
+    "galex_ais_gr5": "II/312/ais",
+    "galex_ais_gr67": "II/335/galex_ais",
     "iras_psc": "II/125/main",
     "legacy_dr8_north": "VII/292/north",
     "legacy_dr8_south": "VII/292/south",
@@ -41,7 +43,7 @@ COMMON_CATALOGS: dict[str, str] = {
 }
 
 DEFAULT_CATALOGS: dict[str, str] = {
-    "galex_ais": "II/335/galex_ais",
+    "galex_ais": "II/312/ais",
     "sdss_dr16": "V/154/sdss16",
     "vhs_dr5": "II/367/vhs_dr5",
     "ukidss_las_dr9": "II/319/las9",

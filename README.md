@@ -88,7 +88,7 @@ The default catalog set is:
 
 | Output key | VizieR table | Bands | Match radius |
 | --- | --- | --- | ---: |
-| `galex_ais` | `II/335/galex_ais` | `FUV`, `NUV` | `3.0"` |
+| `galex_ais` | `II/312/ais` | `FUV`, `NUV` AUTO/Kron | `3.0"` |
 | `sdss_dr16` | `V/154/sdss16` | `u`, `g`, `r`, `i`, `z` | `1.0"` |
 | `vhs_dr5` | `II/367/vhs_dr5` | `Y`, `J`, `H`, `Ks` | `1.0"` |
 | `ukidss_las_dr9` | `II/319/las9` | `Y`, `J`, `H`, `K` | `1.0"` |
@@ -119,6 +119,10 @@ matches = xmatch_catalogs(
 )
 photometry = matches_to_photometry(matches, min_quality=2)
 ```
+
+`galex_ais` uses the native calibrated AUTO/Kron FUV/NUV fluxes returned by
+CDS XMatch. No follow-up VizieR query is performed. The returned photometry
+uses `photometry_method="auto"`.
 
 `sdss_dr16` is converted only from SDSS PSF AB magnitudes
 (`upmag/gpmag/rpmag/ipmag/zpmag`, corresponding to `psfMag_*`). The CDS XMatch
