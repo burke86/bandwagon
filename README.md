@@ -90,6 +90,8 @@ The default catalog set is:
 | --- | --- | --- | ---: |
 | `galex_ais` | `II/312/ais` | `FUV`, `NUV` AUTO/Kron | `3.0"` |
 | `sdss_dr16` | `V/154/sdss16` | `u`, `g`, `r`, `i`, `z` | `1.0"` |
+| `vhs_dr5` | `II/367/vhs_dr5` | `Y`, `J`, `H`, `Ks` | `1.0"` |
+| `ukidss_las_dr9` | `II/319/las9` | `Y`, `J`, `H`, `K` | `1.0"` |
 | `2mass` | `II/246/out` | `J`, `H`, `Ks` | `2.0"` |
 | `allwise` | `II/328/allwise` | `W1`, `W2`, `W3`, `W4` | `3.0"` |
 | `legacy_dr8_north` | `VII/292/north` | Legacy DR8 photo-z fields; `grzW1W2` if Tractor-style flux columns are present | `1.0"` |
@@ -126,7 +128,18 @@ uses `photometry_method="auto"`.
 (`upmag/gpmag/rpmag/ipmag/zpmag`, corresponding to `psfMag_*`). The CDS XMatch
 view exposes SDSS model magnitudes, so `xmatch_catalogs()` enriches SDSS matches
 by querying the full VizieR table in batches by matched `objID`; SDSS model
-magnitude columns are intentionally ignored. `2mass` is converted from Vega
+magnitude columns are intentionally ignored. VHS DR5 and UKIDSS LAS DR9 use
+their catalogued, aperture-corrected 2-arcsec-diameter `AperMag3` Vega
+photometry and are labeled `aperture`; they are not PSF/profile-fit
+measurements. The compact VizieR VHS DR5 table does not publish magnitude
+uncertainties, but the CDS XMatch view does expose the corresponding
+`aperMag3Err` columns; Bandwagon uses those real errors and does not infer
+errors from the unrelated confidence-map columns. VHS rows use the standard
+per-band `ppErrBits < 256` quality cut, and seam/duplicate rows are discarded
+for both surveys. UKIDSS uses the first valid J epoch, falling back
+to its second epoch when needed. Speclite does not bundle VISTA or WFCAM
+response curves, so `speclite_name` is blank for these filters instead of
+incorrectly substituting 2MASS curves. `2mass` is converted from Vega
 magnitudes. AKARI and IRAS publish flux densities, so Bandwagon converts Jy to
 mJy directly. IRAS uncertainty columns are percent flux uncertainties; AKARI
 uncertainty columns are Jy. Legacy Survey Tractor-style `FLUX_*`/`FLUX_IVAR_*`

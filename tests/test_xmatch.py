@@ -41,11 +41,15 @@ def test_normalize_vizier_catalog_resolves_aliases():
     assert normalize_vizier_catalog("akari_irc") == "vizier:II/297/irc"
     assert normalize_vizier_catalog("akari_fis") == "vizier:II/298/fis"
     assert normalize_vizier_catalog("iras_psc") == "vizier:II/125/main"
+    assert normalize_vizier_catalog("vhs") == "vizier:II/367/vhs_dr5"
+    assert normalize_vizier_catalog("ukidss") == "vizier:II/319/las9"
     assert normalize_vizier_catalog("vizier:II/246/out") == "vizier:II/246/out"
 
 
 def test_default_catalogs_include_2mass():
     assert DEFAULT_CATALOGS["galex_ais"] == "II/312/ais"
+    assert DEFAULT_CATALOGS["vhs_dr5"] == "II/367/vhs_dr5"
+    assert DEFAULT_CATALOGS["ukidss_las_dr9"] == "II/319/las9"
     assert DEFAULT_CATALOGS["2mass"] == "II/246/out"
     assert DEFAULT_CATALOGS["legacy_dr8_north"] == "VII/292/north"
     assert DEFAULT_CATALOGS["legacy_dr8_south"] == "VII/292/south"

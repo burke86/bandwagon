@@ -88,6 +88,7 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
                 "e_Hmag": [0.06],
                 "Kmag": [15.0],
                 "e_Kmag": [0.07],
+                "Rflg": ["214"],
                 "angDist": [0.2],
             }
         ),
@@ -167,7 +168,11 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
     assert sdss_u["photometry_method"] == "psf"
 
     j_2mass = phot[(phot["source_id"] == "src") & (phot["filter_name"] == "J_2mass")][0]
-    assert j_2mass["photometry_method"] == "psf"
+    h_2mass = phot[(phot["source_id"] == "src") & (phot["filter_name"] == "H_2mass")][0]
+    ks_2mass = phot[(phot["source_id"] == "src") & (phot["filter_name"] == "Ks_2mass")][0]
+    assert j_2mass["photometry_method"] == "profile"
+    assert h_2mass["photometry_method"] == "aperture"
+    assert ks_2mass["photometry_method"] == "aperture"
 
     w1 = phot[phot["filter_name"] == "W1"][0]
     assert w1["photometry_method"] == "profile"
@@ -177,6 +182,86 @@ def test_matches_to_photometry_converts_default_and_optional_catalogs():
     assert np.isclose(legacy_g["mag"], 15.0)
     assert np.isclose(legacy_g["psf_fwhm_arcsec"], 1.4)
     assert legacy_g["photometry_method"] == "catalog"
+
+
+def test_2mass_uses_read_flags_and_omits_upper_limits():
+    matches = {
+        "2mass": Table(
+            {
+                "source_id": ["src"],
+                "Jmag": [12.0],
+                "e_Jmag": [0.03],
+                "Hmag": [13.0],
+                "e_Hmag": [0.04],
+                "Kmag": [14.0],
+                "e_Kmag": [0.05],
+                "Rflg": ["306"],
+            }
+        )
+    }
+
+    phot = matches_to_photometry(matches)
+
+    assert list(phot["filter_name"]) == ["J_2mass"]
+    assert phot[0]["photometry_method"] == "profile_wings"
+
+
+def test_vhs_and_ukidss_are_aperture_photometry():
+    matches = {
+        "vhs_dr5": Table(
+            {
+                "source_id": ["vhs-primary", "vhs-secondary"],
+                "PriOrSec": [0, 123],
+                "Yap3": [19.0, 19.0],
+                "e_Yap3": [0.05, 0.05],
+                "Yavgap3": [100.0, 100.0],
+                "Yperrbits": [0, 0],
+                "Jap3": [18.5, 18.5],
+                "e_Jap3": [0.06, 0.06],
+                "Javgap3": [100.0, 100.0],
+                "Jperrbits": [0, 0],
+                "Hap3": [18.0, 18.0],
+                "e_Hap3": [0.07, 0.07],
+                "Havgap3": [100.0, 100.0],
+                "Hperrbits": [256, 0],
+                "Ksap3": [17.5, 17.5],
+                "e_Ksap3": [0.08, 0.08],
+                "Ksavgap3": [100.0, 100.0],
+                "Ksperrbits": [0, 0],
+            }
+        ),
+        "ukidss_las_dr9": Table(
+            {
+                "source_id": ["ukidss-primary", "ukidss-duplicate"],
+                "m": [1, 2],
+                "Ymag": [18.0, 18.0],
+                "e_Ymag": [0.03, 0.03],
+                "Jmag1": np.ma.array([17.5, 17.5], mask=[True, False]),
+                "e_Jmag1": np.ma.array([0.02, 0.02], mask=[True, False]),
+                "Jmag2": [17.4, 17.4],
+                "e_Jmag2": [0.04, 0.04],
+                "Hmag": [17.0, 17.0],
+                "e_Hmag": [0.05, 0.05],
+                "Kmag": [16.8, 16.8],
+                "e_Kmag": [0.06, 0.06],
+            }
+        ),
+    }
+
+    phot = matches_to_photometry(matches)
+
+    vhs = phot[phot["catalog"] == "vhs_dr5"]
+    assert set(vhs["filter_name"]) == {"Y_vhs", "J_vhs", "Ks_vhs"}
+    assert set(vhs["photometry_method"]) == {"aperture"}
+    assert np.all(np.asarray(vhs["mag_err"], dtype=float) > 0)
+    assert np.all(np.asarray(vhs["flux_err_mjy"], dtype=float) > 0)
+    assert np.all(np.isnan(np.asarray(vhs["psf_fwhm_arcsec"], dtype=float)))
+
+    ukidss = phot[phot["catalog"] == "ukidss_las_dr9"]
+    assert set(ukidss["filter_name"]) == {"Y_ukidss", "J_ukidss", "H_ukidss", "K_ukidss"}
+    assert set(ukidss["photometry_method"]) == {"aperture"}
+    assert np.isclose(ukidss[ukidss["filter_name"] == "J_ukidss"][0]["mag"], 17.4)
+    assert set(ukidss["source_id"]) == {"ukidss-primary"}
 
 
 def test_sdss_dr16_ignores_model_magnitude_column_names():

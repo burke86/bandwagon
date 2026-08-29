@@ -24,6 +24,19 @@ TWOMASS_VEGA_ZEROPOINT_JY: dict[str, float] = {
     "Ks": 666.7,
 }
 
+# Survey-specific Vega zero-points derived from the published AB offsets via
+# f_nu(Vega=0) = 3631 Jy * 10**(-0.4 * (AB - Vega)).  These filters are not
+# interchangeable with the similarly named 2MASS passbands.
+VISTA_VEGA_ZEROPOINT_JY: dict[str, float] = {
+    band: AB_ZEROPOINT_JY * 10.0 ** (-0.4 * offset)
+    for band, offset in {"Y": 0.618, "J": 0.937, "H": 1.384, "Ks": 1.839}.items()
+}
+
+UKIDSS_VEGA_ZEROPOINT_JY: dict[str, float] = {
+    band: AB_ZEROPOINT_JY * 10.0 ** (-0.4 * offset)
+    for band, offset in {"Y": 0.634, "J": 0.938, "H": 1.379, "K": 1.900}.items()
+}
+
 SPECLITE_NAMES: dict[str, str] = {
     "FUV_galex": "galex-fuv",
     "NUV_galex": "galex-nuv",
@@ -44,6 +57,16 @@ SPECLITE_NAMES: dict[str, str] = {
     "J_2mass": "twomass-J",
     "H_2mass": "twomass-H",
     "Ks_2mass": "twomass-Ks",
+    # Speclite does not bundle VISTA or WFCAM response curves. Keep these
+    # blank rather than incorrectly substituting the 2MASS passbands.
+    "Y_vhs": "",
+    "J_vhs": "",
+    "H_vhs": "",
+    "Ks_vhs": "",
+    "Y_ukidss": "",
+    "J_ukidss": "",
+    "H_ukidss": "",
+    "K_ukidss": "",
     "S9W_akari": "akari-S9W",
     "L18W_akari": "akari-L18W",
     "N60_akari": "akari-N60",
@@ -76,6 +99,16 @@ PSF_FWHM_ARCSEC: dict[str, float] = {
     "J_2mass": 2.5,
     "H_2mass": 2.5,
     "Ks_2mass": 2.5,
+    # The XMatch tables do not expose observation-level seeing. These are
+    # fixed-aperture measurements, so do not report the aperture as a PSF FWHM.
+    "Y_vhs": np.nan,
+    "J_vhs": np.nan,
+    "H_vhs": np.nan,
+    "Ks_vhs": np.nan,
+    "Y_ukidss": np.nan,
+    "J_ukidss": np.nan,
+    "H_ukidss": np.nan,
+    "K_ukidss": np.nan,
     "S9W_akari": 9.4,
     "L18W_akari": 10.4,
     "N60_akari": 26.8,
@@ -96,7 +129,7 @@ class BandSpec:
     band: str
     filter_name: str
     mag_col: str | Sequence[str]
-    err_col: str | Sequence[str]
+    err_col: str | Sequence[str] | None
     system: str
     zero_jy: float
     photometry_method: str = "catalog"
@@ -142,11 +175,27 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
         BandSpec("W4", "W4", "W4mag", "e_W4mag", "vega", WISE_VEGA_ZEROPOINT_JY["W4"], photometry_method="profile"),
     ),
     "2mass": (
-        BandSpec("J", "J_2mass", "Jmag", "e_Jmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"], photometry_method="psf"),
-        BandSpec("H", "H_2mass", "Hmag", "e_Hmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"], photometry_method="psf"),
-        BandSpec("Ks", "Ks_2mass", "Kmag", "e_Kmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"], photometry_method="psf"),
+        BandSpec("J", "J_2mass", "Jmag", "e_Jmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["J"]),
+        BandSpec("H", "H_2mass", "Hmag", "e_Hmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["H"]),
+        BandSpec("Ks", "Ks_2mass", "Kmag", "e_Kmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"]),
+    ),
+    "vhs_dr5": (
+        BandSpec("Y", "Y_vhs", "Yap3", "e_Yap3", "vega", VISTA_VEGA_ZEROPOINT_JY["Y"], photometry_method="aperture"),
+        BandSpec("J", "J_vhs", "Jap3", "e_Jap3", "vega", VISTA_VEGA_ZEROPOINT_JY["J"], photometry_method="aperture"),
+        BandSpec("H", "H_vhs", "Hap3", "e_Hap3", "vega", VISTA_VEGA_ZEROPOINT_JY["H"], photometry_method="aperture"),
+        BandSpec("Ks", "Ks_vhs", "Ksap3", "e_Ksap3", "vega", VISTA_VEGA_ZEROPOINT_JY["Ks"], photometry_method="aperture"),
+    ),
+    "ukidss_las_dr9": (
+        BandSpec("Y", "Y_ukidss", ("Ymag", "yAperMag3"), ("e_Ymag", "yAperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["Y"], photometry_method="aperture"),
+        BandSpec("J", "J_ukidss", ("Jmag1", "Jmag2", "j_1AperMag3"), ("e_Jmag1", "e_Jmag2", "j_1AperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["J"], photometry_method="aperture"),
+        BandSpec("H", "H_ukidss", ("Hmag", "hAperMag3"), ("e_Hmag", "hAperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["H"], photometry_method="aperture"),
+        BandSpec("K", "K_ukidss", ("Kmag", "kAperMag3"), ("e_Kmag", "kAperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["K"], photometry_method="aperture"),
     ),
 }
+
+# Short aliases are valid output keys when passed as iterable catalog names.
+CATALOG_BAND_SPECS["vhs"] = CATALOG_BAND_SPECS["vhs_dr5"]
+CATALOG_BAND_SPECS["ukidss"] = CATALOG_BAND_SPECS["ukidss_las_dr9"]
 
 CATALOG_FLUX_SPECS: dict[str, tuple[FluxBandSpec, ...]] = {
     "galex_ais": (
@@ -304,23 +353,40 @@ def _catalog_to_photometry(
 
     rows = []
     for row in table:
+        if catalog_key in {"vhs", "vhs_dr5"} and not _vhs_primary(row):
+            continue
+        if catalog_key in {"ukidss", "ukidss_las_dr9"} and not _ukidss_primary(row):
+            continue
         source_id = row[source_id_col]
         distance_arcsec = _match_distance_arcsec(row)
-        for spec in mag_specs:
-            mag = _first_value(row, table.colnames, spec.mag_col)
-            mag_err = _first_value(row, table.colnames, spec.err_col)
-            if mag is None or mag_err is None:
+        for band_index, spec in enumerate(mag_specs):
+            photometry_method = spec.photometry_method
+            if catalog_key == "2mass":
+                photometry_method = _twomass_photometry_method(row, table.colnames, band_index)
+                # Rflg=0 and 6 are upper limits; Rflg=9 has no useful flux.
+                if photometry_method is None:
+                    continue
+            if catalog_key in {"vhs", "vhs_dr5"} and not _passes_vhs_band_quality(row, spec.band):
+                continue
+            mag, mag_err = _magnitude_and_error(row, table.colnames, spec)
+            if mag is None or (spec.err_col is not None and mag_err is None):
                 continue
             mag = _as_float(mag)
             mag_err = _as_float(mag_err)
             if max_mag_err is not None and np.isfinite(mag_err) and mag_err > max_mag_err:
                 continue
-            flux_mjy, flux_err_mjy = magnitude_to_flux_mjy(
-                mag,
-                mag_err,
-                zero_jy=spec.zero_jy,
-            )
-            if not np.isfinite(flux_mjy) or not np.isfinite(flux_err_mjy) or flux_mjy <= 0.0:
+            if spec.err_col is None:
+                flux_mjy = 1.0e3 * spec.zero_jy * 10.0 ** (-0.4 * mag)
+                flux_err_mjy = np.nan
+            else:
+                flux_mjy, flux_err_mjy = magnitude_to_flux_mjy(
+                    mag,
+                    mag_err,
+                    zero_jy=spec.zero_jy,
+                )
+            if not np.isfinite(flux_mjy) or flux_mjy <= 0.0:
+                continue
+            if spec.err_col is not None and not np.isfinite(flux_err_mjy):
                 continue
             rows.append(
                 {
@@ -335,7 +401,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": PSF_FWHM_ARCSEC[spec.filter_name],
-                    "photometry_method": spec.photometry_method,
+                    "photometry_method": photometry_method,
                     "match_distance_arcsec": distance_arcsec,
                 }
             )
@@ -435,6 +501,94 @@ def _match_distance_arcsec(row) -> float:
             value = _as_float(row[col])
             return value if np.isfinite(value) else np.nan
     return np.nan
+
+
+def _twomass_photometry_method(row, colnames, band_index: int) -> str | None:
+    """Return the method encoded by the per-band 2MASS ``Rflg`` digit.
+
+    VizieR's J/H/K default magnitudes do not all use the same estimator.
+    A missing flag is retained as generic catalog photometry for compatibility
+    with caller-supplied, reduced 2MASS tables. Upper limits and unusable
+    measurements return ``None`` and are omitted.
+    """
+
+    if "Rflg" not in colnames or np.ma.is_masked(row["Rflg"]):
+        return "catalog"
+    read_flag = str(row["Rflg"]).strip()
+    if len(read_flag) <= band_index:
+        return "catalog"
+    return {
+        "1": "aperture",
+        "2": "profile",
+        "3": "profile_wings",
+        "4": "aperture",
+    }.get(read_flag[band_index])
+
+
+def _vhs_primary(row) -> bool:
+    """Reject seam duplicates while tolerating reduced caller-supplied rows."""
+
+    if "PriOrSec" not in row.colnames:
+        return True
+    value = _as_float(row["PriOrSec"])
+    return not np.isfinite(value) or value == 0
+
+
+def _ukidss_primary(row) -> bool:
+    """Reject rows marked as duplicate in the compact LAS VizieR table."""
+
+    for col in ("m", "mode"):
+        if col in row.colnames:
+            value = _as_float(row[col])
+            return not np.isfinite(value) or value != 2
+    return True
+
+
+def _passes_vhs_band_quality(row, band: str) -> bool:
+    """Apply the standard VHS ppErrBits<256 cut for one band."""
+
+    prefix = "Ks" if band == "Ks" else band
+    error_col = f"{prefix}perrbits"
+    confidence_col = f"{prefix}avgap3"
+    if error_col in row.colnames:
+        error_bits = _as_float(row[error_col])
+        if np.isfinite(error_bits) and error_bits >= 256:
+            return False
+    if confidence_col in row.colnames:
+        confidence = _as_float(row[confidence_col])
+        if np.isfinite(confidence) and confidence <= 0:
+            return False
+    return True
+
+
+def _first_finite_value(row, colnames, candidates):
+    if isinstance(candidates, str):
+        candidates = (candidates,)
+    for col in candidates:
+        if col not in colnames:
+            continue
+        value = row[col]
+        if np.ma.is_masked(value):
+            continue
+        if np.isfinite(_as_float(value)):
+            return value
+    return None
+
+
+def _magnitude_and_error(row, colnames, spec: BandSpec):
+    if spec.err_col is None:
+        return _first_finite_value(row, colnames, spec.mag_col), np.nan
+
+    mag_cols = (spec.mag_col,) if isinstance(spec.mag_col, str) else tuple(spec.mag_col)
+    err_cols = (spec.err_col,) if isinstance(spec.err_col, str) else tuple(spec.err_col)
+    if len(mag_cols) != len(err_cols):
+        raise ValueError(f"magnitude/error column candidates differ for {spec.filter_name}")
+    for mag_col, err_col in zip(mag_cols, err_cols, strict=True):
+        mag = _first_finite_value(row, colnames, mag_col)
+        mag_err = _first_finite_value(row, colnames, err_col)
+        if mag is not None and mag_err is not None:
+            return mag, mag_err
+    return None, None
 
 
 def _first_value(row, colnames, candidates):
