@@ -131,7 +131,9 @@ by querying the full VizieR table in batches by matched `objID`; SDSS model
 magnitude columns are intentionally ignored. VHS DR5 and UKIDSS LAS DR9 use
 their catalogued, aperture-corrected 2-arcsec-diameter `AperMag3` Vega
 photometry and are labeled `aperture`; they are not PSF/profile-fit
-measurements. The compact VizieR VHS DR5 table does not publish magnitude
+measurements. Their normalized rows therefore set
+`aperture_diameter_arcsec=2.0` while leaving `psf_fwhm_arcsec` undefined.
+The compact VizieR VHS DR5 table does not publish magnitude
 uncertainties, but the CDS XMatch view does expose the corresponding
 `aperMag3Err` columns; Bandwagon uses those real errors and does not infer
 errors from the unrelated confidence-map columns. VHS rows use the standard

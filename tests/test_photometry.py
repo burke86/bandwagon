@@ -253,6 +253,9 @@ def test_vhs_and_ukidss_are_aperture_photometry():
     vhs = phot[phot["catalog"] == "vhs_dr5"]
     assert set(vhs["filter_name"]) == {"Y_vhs", "J_vhs", "Ks_vhs"}
     assert set(vhs["photometry_method"]) == {"aperture"}
+    assert np.allclose(
+        np.asarray(vhs["aperture_diameter_arcsec"], dtype=float), 2.0
+    )
     assert np.all(np.asarray(vhs["mag_err"], dtype=float) > 0)
     assert np.all(np.asarray(vhs["flux_err_mjy"], dtype=float) > 0)
     assert np.all(np.isnan(np.asarray(vhs["psf_fwhm_arcsec"], dtype=float)))
@@ -260,6 +263,12 @@ def test_vhs_and_ukidss_are_aperture_photometry():
     ukidss = phot[phot["catalog"] == "ukidss_las_dr9"]
     assert set(ukidss["filter_name"]) == {"Y_ukidss", "J_ukidss", "H_ukidss", "K_ukidss"}
     assert set(ukidss["photometry_method"]) == {"aperture"}
+    assert np.allclose(
+        np.asarray(ukidss["aperture_diameter_arcsec"], dtype=float), 2.0
+    )
+    assert np.all(
+        np.isnan(np.asarray(ukidss["psf_fwhm_arcsec"], dtype=float))
+    )
     assert np.isclose(ukidss[ukidss["filter_name"] == "J_ukidss"][0]["mag"], 17.4)
     assert set(ukidss["source_id"]) == {"ukidss-primary"}
 
