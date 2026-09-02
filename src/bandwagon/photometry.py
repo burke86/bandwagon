@@ -133,6 +133,7 @@ class BandSpec:
     system: str
     zero_jy: float
     photometry_method: str = "catalog"
+    aperture_diameter_arcsec: float = np.nan
 
 
 @dataclass(frozen=True)
@@ -180,16 +181,52 @@ CATALOG_BAND_SPECS: dict[str, tuple[BandSpec, ...]] = {
         BandSpec("Ks", "Ks_2mass", "Kmag", "e_Kmag", "vega", TWOMASS_VEGA_ZEROPOINT_JY["Ks"]),
     ),
     "vhs_dr5": (
-        BandSpec("Y", "Y_vhs", "Yap3", "e_Yap3", "vega", VISTA_VEGA_ZEROPOINT_JY["Y"], photometry_method="aperture"),
-        BandSpec("J", "J_vhs", "Jap3", "e_Jap3", "vega", VISTA_VEGA_ZEROPOINT_JY["J"], photometry_method="aperture"),
-        BandSpec("H", "H_vhs", "Hap3", "e_Hap3", "vega", VISTA_VEGA_ZEROPOINT_JY["H"], photometry_method="aperture"),
-        BandSpec("Ks", "Ks_vhs", "Ksap3", "e_Ksap3", "vega", VISTA_VEGA_ZEROPOINT_JY["Ks"], photometry_method="aperture"),
+        BandSpec(
+            "Y", "Y_vhs", "Yap3", "e_Yap3", "vega",
+            VISTA_VEGA_ZEROPOINT_JY["Y"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
+        BandSpec(
+            "J", "J_vhs", "Jap3", "e_Jap3", "vega",
+            VISTA_VEGA_ZEROPOINT_JY["J"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
+        BandSpec(
+            "H", "H_vhs", "Hap3", "e_Hap3", "vega",
+            VISTA_VEGA_ZEROPOINT_JY["H"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
+        BandSpec(
+            "Ks", "Ks_vhs", "Ksap3", "e_Ksap3", "vega",
+            VISTA_VEGA_ZEROPOINT_JY["Ks"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
     ),
     "ukidss_las_dr9": (
-        BandSpec("Y", "Y_ukidss", ("Ymag", "yAperMag3"), ("e_Ymag", "yAperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["Y"], photometry_method="aperture"),
-        BandSpec("J", "J_ukidss", ("Jmag1", "Jmag2", "j_1AperMag3"), ("e_Jmag1", "e_Jmag2", "j_1AperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["J"], photometry_method="aperture"),
-        BandSpec("H", "H_ukidss", ("Hmag", "hAperMag3"), ("e_Hmag", "hAperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["H"], photometry_method="aperture"),
-        BandSpec("K", "K_ukidss", ("Kmag", "kAperMag3"), ("e_Kmag", "kAperMag3Err"), "vega", UKIDSS_VEGA_ZEROPOINT_JY["K"], photometry_method="aperture"),
+        BandSpec(
+            "Y", "Y_ukidss", ("Ymag", "yAperMag3"),
+            ("e_Ymag", "yAperMag3Err"), "vega",
+            UKIDSS_VEGA_ZEROPOINT_JY["Y"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
+        BandSpec(
+            "J", "J_ukidss", ("Jmag1", "Jmag2", "j_1AperMag3"),
+            ("e_Jmag1", "e_Jmag2", "j_1AperMag3Err"), "vega",
+            UKIDSS_VEGA_ZEROPOINT_JY["J"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
+        BandSpec(
+            "H", "H_ukidss", ("Hmag", "hAperMag3"),
+            ("e_Hmag", "hAperMag3Err"), "vega",
+            UKIDSS_VEGA_ZEROPOINT_JY["H"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
+        BandSpec(
+            "K", "K_ukidss", ("Kmag", "kAperMag3"),
+            ("e_Kmag", "kAperMag3Err"), "vega",
+            UKIDSS_VEGA_ZEROPOINT_JY["K"], photometry_method="aperture",
+            aperture_diameter_arcsec=2.0,
+        ),
     ),
 }
 
@@ -401,6 +438,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": PSF_FWHM_ARCSEC[spec.filter_name],
+                    "aperture_diameter_arcsec": spec.aperture_diameter_arcsec,
                     "photometry_method": photometry_method,
                     "match_distance_arcsec": distance_arcsec,
                 }
@@ -433,6 +471,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": PSF_FWHM_ARCSEC[spec.filter_name],
+                    "aperture_diameter_arcsec": np.nan,
                     "photometry_method": spec.photometry_method,
                     "match_distance_arcsec": distance_arcsec,
                 }
@@ -462,6 +501,7 @@ def _catalog_to_photometry(
                     "flux_mjy": flux_mjy,
                     "flux_err_mjy": flux_err_mjy,
                     "psf_fwhm_arcsec": _row_psf_fwhm(row, table.colnames, spec),
+                    "aperture_diameter_arcsec": np.nan,
                     "photometry_method": "catalog",
                     "match_distance_arcsec": distance_arcsec,
                 }
@@ -663,6 +703,7 @@ def _empty_photometry_table() -> Table:
             "flux_mjy",
             "flux_err_mjy",
             "psf_fwhm_arcsec",
+            "aperture_diameter_arcsec",
             "photometry_method",
             "match_distance_arcsec",
         ],
@@ -675,6 +716,7 @@ def _empty_photometry_table() -> Table:
             float,
             float,
             "U8",
+            float,
             float,
             float,
             float,
